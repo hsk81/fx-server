@@ -8,7 +8,6 @@ class STAMP (models.Model):
     delete_date = models.DateTimeField (null = True)
 
     def __unicode__ (self):
-
         return "%s" % self.insert_date
 
 class ADDRESS (models.Model):
@@ -55,7 +54,6 @@ class ADDRESS (models.Model):
 
 
     def __unicode__ (self):
-
         return self.short_address ()
 
 class ACCOUNT (models.Model):
@@ -64,7 +62,6 @@ class ACCOUNT (models.Model):
     user = models.ForeignKey ('USER', related_name = 'accounts')
     
     def __unicode__ (self):
-
         return "%s" % self.user
 
 class USER (auth.models.User):
@@ -74,13 +71,10 @@ class USER (auth.models.User):
     profile = models.CharField (max_length = 256, blank = True, default = '')
 
     def account (self, account_id):
-
         return self.accounts.get (id = account_id)
 
-    def full_name (self):
-        
+    def full_name (self):        
         return "%s %s" % (self.first_name, self.last_name)
 
     def __unicode__ (self):
-
         return self.full_name ()

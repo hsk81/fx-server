@@ -1,213 +1,31 @@
+#! /usr/bin/python
+
+__author__="hsk81"
+__date__ ="$Apr 22, 2011 2:50:14 PM$"
+
+###############################################################################
+###############################################################################
+
 from django.db import models
-from django.contrib import auth
-from time import time
-
-###############################################################################
-###############################################################################
-
-class STAMP (models.Model):
-    """
-    TODOC
-    """
-    insert_date = models.DateTimeField (auto_now_add = True)
-    update_date = models.DateTimeField (auto_now = True)
-    delete_date = models.DateTimeField (null = True)
-
-    def __unicode__ (self):
-        """
-        Returns string representation for this stamp.
-        """
-        return "%s" % self.insert_date
-
-###############################################################################
-###############################################################################
-
-class ADDRESS (models.Model):
-    """
-    TODOC
-    """
-    class Meta:
-
-        verbose_name_plural = 'addresses'
-
-    line1 = models.CharField (max_length = 256)
-    line2 = models.CharField (max_length = 256, blank = True, default = '')
-    zip = models.CharField (max_length = 256)
-    city = models.CharField (max_length = 256)
-    country = models.CharField (max_length = 256)
-
-    def full_address (self, show_blank_line2 = False):
-        """
-        Returns string representation for this ADDRESS.
-        """
-        if show_blank_line2:
-            return "%s\n%s\n%s %s\n%s" % (
-                self.line1, self.line2, self.zip, self.city, self.country
-            )
-        else:
-            return (self.line2 != "") and (
-                "%s\n%s\n%s %s\n%s" % (
-                    self.line1, self.line2, self.zip, self.city, self.country
-                )
-            ) or (
-                "%s\n%s %s\n%s" % (
-                    self.line1, self.zip, self.city, self.country
-                )
-            )
-
-    def short_address (self, show_blank_line2 = False):
-        """
-        Returns string representation for this ADDRESS.
-        """
-        if show_blank_line2:
-            return "%s\n%s\n%s %s" % (
-                self.line1, self.line2, self.zip, self.city
-            )
-        else:
-            return (self.line2 != "") and (
-                "%s\n%s\n%s %s" % (self.line1, self.line2, self.zip, self.city)
-            ) or (
-                "%s\n%s %s" % (self.line1, self.zip, self.city)
-            )
-
-
-    def __unicode__ (self):
-        """
-        Returns string representation for this ADDRESS.
-        """
-        return self.short_address ()
-
-###############################################################################
-###############################################################################
-
-## public final class User extends java.lang.Object
-class USER (auth.models.User):
-    """
-    Provides access to USER information.
-    """
-    address = models.ForeignKey (ADDRESS)
-    phone = models.CharField (max_length = 256)
-    profile = models.CharField (max_length = 256, blank = True, default = '')
-
-    ## java.util.Vector getAccounts()
-    def get_accounts (self):
-        """
-        Returns a vector of ACCOUNTs owned by this USER.
-        """
-        return self.accounts.all ()
-
-    ## ACCOUNT getAccountWithId(int accountId)
-    def get_account_with_id (self, account_id):
-        """
-        Returns the ACCOUNT owned by this USER with the given account_id.
-        """
-        return self.accounts.get (id = account_id)
-
-    ## java.lang.String getAddress()
-    def get_address (self):
-        """
-        Returns the USERs ADDRESS.
-        """
-        return "%s" % self.adress
-
-    ## long getCreateDate()
-    def get_create_date (self):
-        """
-        Returns the date this USER was created as a unix timestamp.
-        """
-        return time.mktime (self.date_joined.timetuple ())
-
-    ## java.lang.String getEmail()
-    def get_email (self):
-        """
-        Returns this USERs email address.
-        """
-        return "%s" % self.email
-
-    ## java.lang.String getName()
-    def get_name (self):
-        """
-        Returns this USERs full name.
-        """
-        return "%s, %s" % (self.last_name, self.first_name)
-
-    ## java.lang.String getPassword()
-    def get_password (self):
-        """
-        Returns the login password for this USER.
-        """
-        return "%s" % self.password
-
-    ## java.lang.String getProfile()
-    def get_profile (self):
-        """
-        Returns the profile string for this USER.
-        """
-        return "%s" % self.profile
-
-    ## java.lang.String getTelephone()
-    def get_telephone (self):
-        """
-        Returns this USERs telephone number.
-        """
-        return "%s" % self.phone
-
-    ## int getUserId()
-    def get_user_id (self):
-        """
-        Returns this USERs unique id number.
-        """
-        return self.pk
-
-    ## java.lang.String getUserName()
-    def get_user_name (self):
-        """
-        Returns the login username for this USER.
-        """
-        return "%s" % self.username
-
-    ## void setProfile(java.lang.String newprofile)
-    def set_profile (self, new_profile):
-        """
-        Sends a profile string to be saved on the server and associated with
-        this USER.
-        """
-        self.profile = new_profile
-
-    ## java.lang.String toString()
-    def __unicode__ (self):
-        """
-        Returns string representation for this USER.
-        """
-        return "%s, %s" % (self.last_name, self.first_name)
-
-###############################################################################
-###############################################################################
-
-class CURRENCY (models.Model):
-    """
-    TODOC
-    """
-    code = models.CharField (max_length = 3)
-    name = models.CharField (max_length = 256)
-
-    def __unicode__ (self):
-        """
-        Returns string representation for this CURRENCY.
-        """
-        return "%s" % self.code
+from core.models import *
 
 ###############################################################################
 ###############################################################################
 
 ## public final class Account extends java.lang.Object
 class ACCOUNT (models.Model):
+
     """
     An ACCOUNT object represents an existing trading account. ACCOUNTs cannot
     be created through this API. ACCOUNTs are identified by a unique integer id
     (account_id). Current open trades, ORDERs and TRANSACTIONs are maintained
     and kept up-to-date within the object.
     """
+
+    class Meta:
+
+        app_label = 'core'
+
     stamp = models.ForeignKey (STAMP)
     user = models.ForeignKey (USER, related_name = 'accounts')
     name = models.CharField (max_length = 256)
@@ -382,7 +200,7 @@ class ACCOUNT (models.Model):
         querying the server if neccessary.
         """
         raise NotImplementedError
-    
+
     ## MARKET_ORDER getTradeWithId(int transactionNumber)
     def get_trade_with_id (self, transaction_number):
         """
@@ -434,7 +252,7 @@ class ACCOUNT (models.Model):
         this ACCOUNT.
         """
         self.profile = new_profile
-        
+
     ## java.lang.String toString()
     def __unicode__ (self):
         """
@@ -444,3 +262,7 @@ class ACCOUNT (models.Model):
 
 ###############################################################################
 ###############################################################################
+
+if __name__ == "__main__":
+
+    pass

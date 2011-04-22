@@ -31,6 +31,9 @@ class ACCOUNT (models.Model):
     name = models.CharField (max_length = 256)
     home_currency = models.ForeignKey (CURRENCY)
     profile = models.CharField (max_length = 256, blank = True, default = '')
+    balance = models.DecimalField (
+        max_digits=15, decimal_places=6, default = 0.000000
+    )
 
     ## void close(LIMIT_ORDER lo)
     def close_limit_order (self, lo):
@@ -87,7 +90,7 @@ class ACCOUNT (models.Model):
         Returns the most up-to-date account balance, querying the server if
         neccessary.
         """
-        raise NotImplementedError
+        return self.balance
 
     ## long getCreateDate()
     def get_create_date (self):

@@ -29,11 +29,16 @@ class ACCOUNT (models.Model):
     stamp = models.ForeignKey (STAMP)
     user = models.ForeignKey (USER, related_name = 'accounts')
     name = models.CharField (max_length = 256)
-    home_currency = models.ForeignKey (CURRENCY)
     profile = models.CharField (max_length = 256, blank = True, default = '')
+    home_currency = models.ForeignKey (CURRENCY)
+
     balance = models.DecimalField (
         max_digits=15, decimal_places=6, default = 0.000000
     )
+
+    def __init__ (self):
+
+        self.event_manager = EVENT_MANAGER ()
 
     ## void close(LIMIT_ORDER lo)
     def close_limit_order (self, lo):
@@ -105,7 +110,7 @@ class ACCOUNT (models.Model):
         """
         Gets the event manager for this account
         """
-        raise NotImplementedError
+        return self.event_manager
 
     ## java.lang.String getHomeCurrency()
     def get_home_currency (self):
@@ -202,14 +207,17 @@ class ACCOUNT (models.Model):
         Returns the Vector of MARKET_ORDERs currently held by this account,
         querying the server if neccessary.
         """
-        raise NotImplementedError
+        return MARKET_ORDER.objects.get (account__id = self.id)
 
     ## MARKET_ORDER getTradeWithId(int transactionNumber)
     def get_trade_with_id (self, transaction_number):
         """
         Returns the MARKET_ORDER with the given transaction number.
         """
-        raise NotImplementedError
+        return MARKET_ORDER.objects.get (
+            account__id = self.id,
+            transaction_number = transaction_number
+        )
 
     ## java.util.Vector getTransactions()
     def get_transactions (self):

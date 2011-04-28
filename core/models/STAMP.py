@@ -28,7 +28,7 @@ class STAMP (models.Model):
 
     def __unicode__ (self):
         """
-        Returns string representation for this stamp.
+        Returns string representation for this STAMP.
         """
         return "%s" % self.insert_date
 

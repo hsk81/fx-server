@@ -11,6 +11,7 @@ from ADDRESS import ADDRESS
 from USER import USER
 from CURRENCY import CURRENCY
 from ACCOUNT import ACCOUNT
+from EVENT_MANAGER import EVENT_MANAGER
 
 ###############################################################################
 ###############################################################################

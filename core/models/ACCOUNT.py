@@ -1,7 +1,7 @@
 #! /usr/bin/python
 
-__author__="hsk81"
-__date__ ="$Apr 22, 2011 2:50:14 PM$"
+__author__ = "hsk81"
+__date__ = "$Apr 22, 2011 2:50:14 PM$"
 
 ###############################################################################
 ###############################################################################
@@ -152,7 +152,7 @@ class ACCOUNT (models.Model):
     ## java.util.Vector getOrders()
     def get_orders (self):
         """
-        Returns the Vector of LIMIT_ORDERs held by this account, querying the
+        Returns the vector of LIMIT_ORDERs held by this account, querying the
         server if neccessary.
         """
         raise NotImplementedError
@@ -204,10 +204,10 @@ class ACCOUNT (models.Model):
     ## java.util.Vector getTrades()
     def get_trades (self):
         """
-        Returns the Vector of MARKET_ORDERs currently held by this account,
+        Returns the vector of MARKET_ORDERs currently held by this account,
         querying the server if neccessary.
         """
-        return MARKET_ORDER.objects.get (account__id = self.id)
+        return MARKET_ORDER.objects.filter (account__id = self.id)
 
     ## MARKET_ORDER getTradeWithId(int transactionNumber)
     def get_trade_with_id (self, transaction_number):
@@ -222,7 +222,7 @@ class ACCOUNT (models.Model):
     ## java.util.Vector getTransactions()
     def get_transactions (self):
         """
-        Returns a Vector of TRANSACTIONs that have recently occured on this
+        Returns a vector of TRANSACTIONs that have recently occured on this
         account, querying the server if neccessary.
         """
         raise NotImplementedError

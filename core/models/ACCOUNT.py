@@ -30,14 +30,15 @@ class ACCOUNT (models.Model):
     user = models.ForeignKey (USER, related_name = 'accounts')
     name = models.CharField (max_length = 256)
     profile = models.CharField (max_length = 256, blank = True, default = '')
-    home_currency = models.ForeignKey (CURRENCY)
+    home_currency = models.CharField (max_length = 3)
 
     balance = models.DecimalField (
-        max_digits=15, decimal_places=6, default = 0.000000
+        max_digits = 15, decimal_places = 6, default = 0.000000
     )
 
-    def __init__ (self):
+    def __init__ (self, *args, **kwargs):
 
+        super (EVENT_MANAGER, self).__init__ (*args, **kwargs)
         self.event_manager = EVENT_MANAGER ()
 
     ## void close(LIMIT_ORDER lo)

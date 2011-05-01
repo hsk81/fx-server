@@ -25,7 +25,9 @@ class EVENT_MANAGER (models.Model):
 
         app_label = 'core'
 
-    def __init__ (self):
+    def __init__ (self, *args, **kwargs):
+
+        super (EVENT_MANAGER, self).__init__ (*args, **kwargs)
 
         self.uuid = uuid ()
         self.events = []

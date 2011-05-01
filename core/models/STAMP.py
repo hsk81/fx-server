@@ -15,7 +15,7 @@ from core.models import *
 class STAMP (models.Model):
 
     """
-    TODOC
+    ...
     """
 
     class Meta:

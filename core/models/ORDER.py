@@ -26,26 +26,36 @@ class ORDER (models.Model):
         app_label = 'core'
         abstract = True
 
+    high_price_limit = models.DecimalField (
+        max_digits = 15, decimal_places = 6, default = 0.000000)
+    low_price_limit = models.DecimalField (
+        max_digits = 15, decimal_places = 6, default = 0.000000)
+
+    pair = models.ForeignKey (PAIR)
+    
+    _stop_loss_order = models.ForeignKey ('STOP_LOSS_ORDER')
+    _take_profit_order = models.ForeignKey ('TAKE_PROFIT_ORDER')
+    
     ## double getHighPriceLimit()
     def get_high_price_limit (self):
         """
         Returns the high price limit.
         """
-        raise NotImplementedError
+        raise self.high_price_limit
 
     ## double getLowPriceLimit()
     def get_low_price_limit (self):
         """
         Returns the low price limit.
         """
-        raise NotImplementedError
+        raise self.low_price_limit
 
     ## FXPair getPair()
     def get_pair (self):
         """
         Returns the PAIR.
         """
-        raise NotImplementedError
+        raise self.pair
 
     ## double getPrice()
     def get_price (self):
@@ -59,14 +69,14 @@ class ORDER (models.Model):
         """
         Returns the STOP_LOSS_ORDER associated with this ORDER.
         """
-        raise NotImplementedError
+        return self._stop_loss_order
 
     ## TakeProfitOrder getTakeProfit()
     def get_take_profit (self):
         """
         Returns the TAKE_PROFIT_ORDER associated with this ORDER.
         """
-        raise NotImplementedError
+        return self._take_profit_order
 
     ## long getTimestamp()
     def get_timestamp (self):
@@ -76,7 +86,7 @@ class ORDER (models.Model):
         raise NotImplementedError
 
     ## int getTransactionNumber()
-    def get_transaction_numbe (self):
+    def get_transaction_number (self):
         """
         Returns the transaction number.
         """
@@ -108,21 +118,21 @@ class ORDER (models.Model):
         """
         Sets the currency PAIR for this ORDER.
         """
-        raise NotImplementedError
+        self.pair = pair
 
     ## void setStopLoss(StopLossOrder stoploss)
-    def set_stop_loss (self, stop_loss):
+    def set_stop_loss (self, _stop_loss_order):
         """
         Sets the STOP_LOSS_ORDER for this ORDER.
         """
-        raise NotImplementedError
+        self._stop_loss_order = _stop_loss_order
 
     ## void setTakeProfit(TakeProfitOrder takeprofit)
-    def set_take_profit (self, take_profit):
+    def set_take_profit (self, _take_profit_order):
         """
         Sets the TAKE_PROFIT_ORDER for this ORDER.
         """
-        raise NotImplementedError
+        self._take_profit_order = _take_profit_order
 
     ## void setUnits(long units)
     def set_units (self, units):
@@ -130,7 +140,6 @@ class ORDER (models.Model):
         Sets the units.
         """
         raise NotImplementedError
-
 
 ###############################################################################
 ###############################################################################

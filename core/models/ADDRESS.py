@@ -15,7 +15,7 @@ from core.models import *
 class ADDRESS (models.Model):
 
     """
-    TODOC
+    ...
     """
     
     class Meta:

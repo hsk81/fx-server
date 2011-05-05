@@ -104,7 +104,7 @@ class ACCOUNT (models.Model):
         Returns the creation date for this account expressed as a unix
         timestamp.
         """
-        return time.mktime (self.stame.insert_date.timetuple ())
+        return time.mktime (self.stamp.insert_date.timetuple ())
 
     ## FXEventManager getEventManager()
     def get_event_manager (self):

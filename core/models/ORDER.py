@@ -26,16 +26,21 @@ class ORDER (models.Model):
         app_label = 'core'
         abstract = True
 
+    stamp = models.ForeignKey (STAMP)
+
+    units = models.IntegerField ()
+    pair = models.ForeignKey (PAIR)
+
+    price = models.DecimalField (
+        max_digits = 15, decimal_places = 6, default = 0.000000)
     high_price_limit = models.DecimalField (
         max_digits = 15, decimal_places = 6, default = 0.000000)
     low_price_limit = models.DecimalField (
         max_digits = 15, decimal_places = 6, default = 0.000000)
+    
+    stop_loss = models.ForeignKey ('STOP_LOSS_ORDER')
+    take_profit = models.ForeignKey ('TAKE_PROFIT_ORDER')
 
-    pair = models.ForeignKey (PAIR)
-    
-    _stop_loss_order = models.ForeignKey ('STOP_LOSS_ORDER')
-    _take_profit_order = models.ForeignKey ('TAKE_PROFIT_ORDER')
-    
     ## double getHighPriceLimit()
     def get_high_price_limit (self):
         """
@@ -62,56 +67,56 @@ class ORDER (models.Model):
         """
         Returns the ORDER price.
         """
-        raise NotImplementedError
+        raise self.price
 
     ## StopLossOrder getStopLoss()
     def get_stop_loss (self):
         """
         Returns the STOP_LOSS_ORDER associated with this ORDER.
         """
-        return self._stop_loss_order
+        return self.stop_loss
 
     ## TakeProfitOrder getTakeProfit()
     def get_take_profit (self):
         """
         Returns the TAKE_PROFIT_ORDER associated with this ORDER.
         """
-        return self._take_profit_order
+        return self.take_profit
 
     ## long getTimestamp()
     def get_timestamp (self):
         """
         Returns the timestamp for this ORDER.
         """
-        raise NotImplementedError
+        return time.mktime (self.stamp.update_date.timetuple ())
 
     ## int getTransactionNumber()
     def get_transaction_number (self):
         """
         Returns the transaction number.
         """
-        raise NotImplementedError
+        return self.id
 
     ## long getUnits()
     def get_units (self):
         """
         Returns the units field.
         """
-        raise NotImplementedError
+        self.units
 
     ## void setHighPriceLimit(double limit)
     def set_high_price_limit (self, limit):
         """
         Sets the highest price that this order will trigger at.
         """
-        raise NotImplementedError
+        self.high_price_limit = limit
 
     ## void setLowPriceLimit(double limit)
     def set_low_price_limit (self, limit):
         """
         Sets the lowest price that this order will trigger at.
         """
-        raise NotImplementedError
+        self.low_price_limit = limit
 
     ## void setPair(FXPair pair)
     def set_pair (self, pair):
@@ -121,25 +126,25 @@ class ORDER (models.Model):
         self.pair = pair
 
     ## void setStopLoss(StopLossOrder stoploss)
-    def set_stop_loss (self, _stop_loss_order):
+    def set_stop_loss (self, stop_loss):
         """
         Sets the STOP_LOSS_ORDER for this ORDER.
         """
-        self._stop_loss_order = _stop_loss_order
+        self.stop_loss = stop_loss
 
     ## void setTakeProfit(TakeProfitOrder takeprofit)
-    def set_take_profit (self, _take_profit_order):
+    def set_take_profit (self, take_profit):
         """
         Sets the TAKE_PROFIT_ORDER for this ORDER.
         """
-        self._take_profit_order = _take_profit_order
+        self.take_profit = take_profit
 
     ## void setUnits(long units)
     def set_units (self, units):
         """
         Sets the units.
         """
-        raise NotImplementedError
+        self.units = units
 
 ###############################################################################
 ###############################################################################

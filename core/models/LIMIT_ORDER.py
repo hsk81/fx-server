@@ -1,38 +1,44 @@
 #! /usr/bin/python
 
 __author__ = "hsk81"
-__date__ = "$Apr 22, 2011 2:50:14 PM$"
+__date__ = "$May 8, 2011 12:00:09 PM$"
 
 ###############################################################################
 ###############################################################################
 
-from django.db import models
 from core.models import *
 
 ###############################################################################
 ###############################################################################
 
-class STAMP (models.Model):
+## public final class LimitOrder extends EntryOrder implements Cloneable
+class LIMIT_ORDER (ORDER):
 
     """
-    ???
+    A LIMIT_ORDER is a spot order that is executed when the target price is met.
+    The STOP_LOSS_ORDER and TAKE_PROFIT_ORDER members will be carried over to
+    the resulting trade.
     """
 
     class Meta:
 
         app_label = 'core'
-        verbose_name_plural = 'stamps'
+        verbose_name_plural = 'limit orders'
 
-    insert_date = models.DateTimeField (auto_now_add = True)
-    update_date = models.DateTimeField (auto_now = True)
-    delete_date = models.DateTimeField (null = True)
-
+    ## java.lang.Object clone()
+    def clone (self):
+        """
+        Returns a exact copy of this LIMIT_ORDER.
+        """
+        raise NotImplementedError
+    
+    ## java.lang.String toString()
     def __unicode__ (self):
         """
-        Returns string representation for this STAMP.
+        ???
         """
-        return "%s" % self.insert_date
-
+        raise NotImplementedError
+    
 ###############################################################################
 ###############################################################################
 

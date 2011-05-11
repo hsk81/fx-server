@@ -23,6 +23,7 @@ class STOP_LOSS_ORDER (ORDER):
     class Meta:
 
         app_label = 'core'
+        verbose_name_plural = 'stop loss orders'
 
     ##
     ## TODO!

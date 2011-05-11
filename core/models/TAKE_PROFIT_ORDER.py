@@ -24,6 +24,7 @@ class TAKE_PROFIT_ORDER (ORDER):
     class Meta:
 
         app_label = 'core'
+        verbose_name_plural = 'take profit orders'
 
     ##
     ## TODO!

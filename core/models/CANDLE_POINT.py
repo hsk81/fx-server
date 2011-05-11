@@ -1,70 +1,86 @@
 #! /usr/bin/python
 
 __author__ = "hsk81"
-__date__ = "$Apr 29, 2011 8:28:01 PM$"
+__date__ = "$May 8, 2011 11:36:39 AM$"
 
 ###############################################################################
 ###############################################################################
 
-from core.models import *
+from django.db import models
 
 ###############################################################################
 ###############################################################################
 
-## public final class MarketOrder extends Order implements Cloneable
-class MARKET_ORDER (ORDER):
+## public class CandlePoint extends Object implements Cloneable
+class CANDLE_POINT (models.Model):
 
     """
-    A MARKET_ORDER is used to create a spot trade.
+    A CANDLE_POINT is a container for candle information. It is calculated from
+    a HISTORY_POINT directly.
     """
 
     class Meta:
 
         app_label = 'core'
-        verbose_name_plural = 'market orders'
+        verbose_name_plural = 'candle points'
+
+    ## CandlePoint(long timestamp,
+    ##     double open, double close, double min, double max
+    ## )
+    def __init__ (self, *args, **kwargs):
+        """
+        ???
+        """
+        super (CANDLE_POINT, self).__init__ (*args, **kwargs)
 
     ## java.lang.Object clone()
     def clone (self):
         """
-        Returns a exact copy of this MARKET_ORDER.
+        ???
         """
         raise NotImplementedError
 
-    ## MarketOrder getClose()
+    ## double getClose()
     def get_close (self):
         """
         ???
         """
         raise NotImplementedError
 
-    ## double getRealizedPL()
-    def get_realized_pl (self):
+    ## double getMax()
+    def get_max (self):
         """
-        Returns the profit realized on this trade.
-        """
-        raise NotImplementedError
-
-    ## int getTransactionLink()
-    def get_transaction_link (self):
-        """
-        Returns the transaction number of any trade or order that is related to 
-        this trade.
-        """
-        raise NotImplementedError
-
-    ## double getUnrealizedPL(FXTick tick)
-    def get_unrealized_pl (self, tick):
-        """
-        Returns the unrealized profit/loss held by this order based on the
-        provided market rate.
+        ???
         """
         raise NotImplementedError
     
+    ## double getMin()
+    def get_min (self):
+        """
+        ???
+        """
+        raise NotImplementedError
+
+    ## double getOpen()
+    def get_open (self):
+        """
+        ???
+        """
+        raise NotImplementedError
+
+    ## long getTimestamp()
+    def get_timestamp (self):
+        """
+        ???
+        """
+        raise NotImplementedError
+
+    ## java.lang.String toString()
     def __unicode__ (self):
         """
-        Returns string representation for this MARKET_ORDER.
+        ???
         """
-        return "%s" % self.id
+        raise NotImplementedError
 
 ###############################################################################
 ###############################################################################

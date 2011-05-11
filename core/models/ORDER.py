@@ -12,7 +12,7 @@ from core.models import *
 ###############################################################################
 ###############################################################################
 
-## public abstract class Order extends java.lang.Object
+## public abstract class Order extends Object
 class ORDER (models.Model):
 
     """
@@ -24,10 +24,10 @@ class ORDER (models.Model):
     class Meta:
 
         app_label = 'core'
+        verbose_name_plural = 'orders'
         abstract = True
 
     stamp = models.ForeignKey (STAMP)
-
     units = models.IntegerField ()
     pair = models.ForeignKey (PAIR)
 

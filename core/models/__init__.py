@@ -13,9 +13,14 @@ from PAIR import PAIR
 from ACCOUNT import ACCOUNT
 from EVENT_MANAGER import EVENT_MANAGER
 from ORDER import ORDER
+from ENTRY_ORDER import ENTRY_ORDER
+from LIMIT_ORDER import LIMIT_ORDER
 from MARKET_ORDER import MARKET_ORDER
 from STOP_LOSS_ORDER import STOP_LOSS_ORDER
 from TAKE_PROFIT_ORDER import TAKE_PROFIT_ORDER
+from CANDLE_POINT import CANDLE_POINT
+from RATE_TABLE import RATE_TABLE
+from TICK import TICK
 
 ###############################################################################
 ###############################################################################

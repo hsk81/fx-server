@@ -24,6 +24,7 @@ class EVENT_MANAGER (models.Model):
     class Meta:
 
         app_label = 'core'
+        verbose_name_plural = 'event managers'
 
     def __init__ (self, *args, **kwargs):
 

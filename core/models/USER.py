@@ -24,6 +24,7 @@ class USER (auth.models.User):
     class Meta:
 
         app_label = 'core'
+        verbose_name_plural = 'users'
 
     address = models.ForeignKey (ADDRESS)
     phone = models.CharField (max_length = 256)

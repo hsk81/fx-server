@@ -12,7 +12,7 @@ from core.models import *
 ###############################################################################
 ###############################################################################
 
-## public final class Account extends java.lang.Object
+## public final class Account extends Object
 class ACCOUNT (models.Model):
 
     """
@@ -25,6 +25,7 @@ class ACCOUNT (models.Model):
     class Meta:
 
         app_label = 'core'
+        verbose_name_plural = 'accounts'
 
     stamp = models.ForeignKey (STAMP)
     user = models.ForeignKey (USER, related_name = 'accounts')
@@ -35,11 +36,6 @@ class ACCOUNT (models.Model):
     balance = models.DecimalField (
         max_digits = 15, decimal_places = 6, default = 0.000000
     )
-
-    def __init__ (self, *args, **kwargs):
-
-        super (EVENT_MANAGER, self).__init__ (*args, **kwargs)
-        self.event_manager = EVENT_MANAGER ()
 
     ## void close(LIMIT_ORDER lo)
     def close_limit_order (self, lo):
@@ -81,7 +77,7 @@ class ACCOUNT (models.Model):
         """
         Returns the unique id number associated with this ACCOUNT.
         """
-        return self.pk
+        return self.id
 
     ## java.lang.String getAccountName()
     def get_account_name (self):
@@ -111,7 +107,7 @@ class ACCOUNT (models.Model):
         """
         Gets the event manager for this account
         """
-        return self.event_manager
+        raise NotImplementedError
 
     ## java.lang.String getHomeCurrency()
     def get_home_currency (self):

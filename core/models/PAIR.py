@@ -22,6 +22,7 @@ class PAIR (models.Model):
     class Meta:
 
         app_label = 'core'
+        verbose_name_plural = 'pairs'
 
     quote = models.CharField (max_length = 3, blank = True)
     base = models.CharField (max_length = 3, blank = True)

@@ -12,7 +12,7 @@ from core.models import *
 ###############################################################################
 ###############################################################################
 
-## public class FXPair extends java.lang.Object implements java.lang.Cloneable
+## public class FXPair Object implements Cloneable
 class PAIR (models.Model):
 
     """
@@ -24,105 +24,43 @@ class PAIR (models.Model):
         app_label = 'core'
         verbose_name_plural = 'pairs'
 
-    quote = models.CharField (max_length = 3, blank = True)
-    base = models.CharField (max_length = 3, blank = True)
+    ###########################################################################
+    ###########################################################################
 
-    ## FXPair(java.lang.String base, java.lang.String quote)
     def __init__ (self, *args, **kwargs):
-        """
-        Creates a new FXPair object with the specified base and quote currency.
-        """
+
         super (PAIR, self).__init__ (*args, **kwargs)
 
-    ## java.lang.Object clone()
-    def clone (self):
-        """
-        Returns a exact copy of this PAIR.
-        """
-        raise NotImplementedError
+    ###########################################################################
+    ###########################################################################
 
-    ## int compareTo(FXPair fxpair)
-    def compare_to (self, pair):
-        """
-        Performs a lexicographical comparison of two PAIR objects.
-        """
-        raise NotImplementedError
+    quote = models.CharField (max_length=3, blank=True)
+    base = models.CharField (max_length=3, blank=True)
+    active = models.BooleanField (default=False)
 
-    ## boolean equals(java.lang.Object o)
-    def equals (self, object):
-        """
-        Compares this PAIR to another PAIR.
-        """
-        raise NotImplementedError
+    ###########################################################################
+    ###########################################################################
 
-    ## java.lang.String getBase()
-    def get_base (self):
-        """
-        Returns the base currency.
-        """
-        return self.base
-    
-    ## FXPair getInverse()
-    def get_inverse (self):
-        """
-        Returns a new PAIR object with the base and quote currency reversed.
-        """
-        return PAIR (quote = self.base, base = self.quote)
+    inverse = property (
+        lambda self: PAIR (quote = self.base, base = self.quote)
+    )
 
-    ## java.lang.String getPair()
-    def get_pair (self):
-        """
-        Returns the currency PAIR as a string.
-        """
-        return "%s/%s" % (self.quote, self.base)
+    def get_halted (self):
 
-    ## java.lang.String getQuote()
-    def get_quote (self):
-        """
-        Returns the quote currency.
-        """
-        return self.quote
-    
-    ## int hashCode()
-    def hash_code (self):
-        """
-        Return the hashcode of this PAIR.
-        """
-        raise NotImplementedError
+        return not self.active
 
-    ## boolean isHalted()
-    def is_halted (self):
-        """
-        Returns the trading status of this PAIR.
-        """
-        raise NotImplementedError
+    def set_halted (self, value):
 
-    ## void setBase(java.lang.String base)
-    def set_base (self, base):
-        """
-        Sets the base currency.
-        """
-        self.base = base
+        self.active = not value
 
-    ## void setPair(java.lang.String pair)
-    def set_pair (self, pair):
-        """
-        Sets the currency PAIR.
-        """
-        raise NotImplementedError
+    halted = property (get_halted, set_halted)
 
-    ## void setQuote(java.lang.String quote)
-    def set_quote (self, quote):
-        """
-        Sets the quote currency.
-        """
-        self.quote = quote
+    ###########################################################################
+    ###########################################################################
 
     def __unicode__ (self):
-        """
-        Returns string representation for this PAIR.
-        """
-        return self.get_pair ()
+
+        return "%s/%s" % (self.quote, self.base)
 
 ###############################################################################
 ###############################################################################

@@ -8,6 +8,7 @@ __date__ = "$May 8, 2011 12:16:49 PM$"
 
 from django.db import models
 from core.models import *
+import time
 
 ###############################################################################
 ###############################################################################
@@ -24,7 +25,17 @@ class TICK (models.Model):
         app_label = 'core'
         verbose_name_plural = 'ticks'
 
-    timestamp = models.DateTimeField (auto_now = True)
+    ###########################################################################
+    ###########################################################################
+
+    def __init__ (self, *args, **kwargs):
+
+        super (TICK, self).__init__ (*args, **kwargs)
+
+    ###########################################################################
+    ###########################################################################
+
+    datetime = models.DateTimeField (auto_now = True)
 
     ask = models.DecimalField (
         max_digits=9, decimal_places=6, default=0.000000
@@ -36,95 +47,43 @@ class TICK (models.Model):
 
     pair = models.ForeignKey (PAIR)
 
-    ## FXTick(long timestamp, double bid, double ask) 
-    def __init__ (self, *args, **kwargs):
-
-        super (TICK, self).__init__ (*args, **kwargs)
-
-    ## java.lang.Object clone()
-    def clone (self):
-        """
-        Returns a exact copy of this TICK.
-        """
-        return TICK (timestamp=self.timestamp, bid=self.bid, ask=self.ask)
+    ###########################################################################
+    ###########################################################################
     
-    ## boolean equals(java.lang.Object o)
-    def equals (self, tick):
-        """
-        Compares two TICK objects.
-        """
-        raise NotImplementedError
+    mean = property (lambda self: (self.ask + self.bid) / 2.0)
+    inverse = property (lambda self: TICK (ask=self.bid, bid=self.ask))
 
-    ## double getAsk()
-    def get_ask (self):
-        """
-        Returns the ask price.
-        """
-        return self.ask
+    def get_unixstamp (self):
 
-    ## double getBid()
-    def get_bid (self):
-        """
-        Returns the bid price.
-        """
-        return self.bid
+        return time.mktime (self.datetime_stamp.timetuple ())
 
-    ## FXTick getInverse()
-    def get_inverse (self):
-        """
-        Return a new TICK which is the inverse of this TICK.
-        """
-        raise NotImplementedError
+    def set_unixstamp (self, value):
 
-    ## double getMean()
-    def get_mean (self):
-        """
-        ???
-        """
-        raise NotImplementedError
+        self.datetime = datetime.fromtimestamp (value)
 
-    ## long getTimestamp()
-    def get_timestamp (self):
-        """
-        Returns the unix timestamp for this TICK.
-        """
-        time.mktime (self.timestamp.timetuple ())
+    unixstamp = property (get_unixstamp, set_unixstamp)
+    
+    def date (self):
 
-    ## int hashCode()
-    def hash_code (self):
-        """
-        Return the hashcode of this pair.
-        """
-        raise NotImplementedError
+        return self.datetime.strftime ('%Y %b %d')
 
-    ## void setAsk(double ask)
-    def set_ask (self, ask):
-        """
-        Sets the ask price.
-        """
-        self.ask = ask
+    date.short_description = 'date'
+    date.admin_order_field = 'datetime'
 
-    ## void setBid(double bid)
-    def set_bid (self, bid):
-        """
-        Sets the bid price.
-        """
-        self.bid = bid
-        
-    ## void setTimestamp(long timestamp)
-    def set_timestamp (self, timestamp):
-        """
-        Sets the timestamp.
-        """
-        self.timestamp = datetime.fromtimestamp (timestamp)
+    def time (self):
 
-    ## java.lang.String toString()
+        return self.datetime.strftime ('%H:%M:%S.%f')
+
+    time.short_description = 'time'
+    time.admin_order_field = 'datetime'
+
+    ###########################################################################
+    ###########################################################################
+    
     def __unicode__ (self):
-        """
-        ???
-        """
-        return "%s: [%.6f,%.6f] for %s" % (
-            self.timestamp, self.ask, self.bid, self.pair
+
+        return "%s/%s [%.6f,%.6f] @ %s" % (
+            self.pair.quote, self.pair.base, self.ask, self.bid, self.datetime
         )
     
 ###############################################################################
@@ -133,3 +92,6 @@ class TICK (models.Model):
 if __name__ == "__main__":
 
     pass
+
+###############################################################################
+###############################################################################

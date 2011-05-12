@@ -24,7 +24,7 @@ admin.site.register (PAIR, PAIRAdmin)
 
 class TICKAdmin (admin.ModelAdmin):
 
-    list_display = ('id', 'date', 'time', 'ask', 'bid', 'pair')
+    list_display = ('id', 'get_date', 'get_time', 'ask', 'bid', 'pair')
     list_filter = ['datetime','pair']
     date_hierarchy = 'datetime'
     time_hierarchy = 'datetime'

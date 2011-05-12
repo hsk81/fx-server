@@ -55,35 +55,38 @@ class TICK (models.Model):
 
     def get_unixstamp (self):
 
-        return time.mktime (self.datetime_stamp.timetuple ())
+        return time.mktime (self.datetime.timetuple ())
 
-    def set_unixstamp (self, value):
+    unixstamp = property (get_unixstamp)
 
-        self.datetime = datetime.fromtimestamp (value)
-
-    unixstamp = property (get_unixstamp, set_unixstamp)
+    get_unixstamp.short_description = 'unixstamp'
+    get_unixstamp.admin_order_field = 'datetime'
     
-    def date (self):
+    def get_date (self):
 
-        return self.datetime.strftime ('%Y %b %d')
+        return self.datetime.strftime ('%Y-%m-%d')
 
-    date.short_description = 'date'
-    date.admin_order_field = 'datetime'
+    date = property (get_date)
+    
+    get_date.short_description = 'date'
+    get_date.admin_order_field = 'datetime'
 
-    def time (self):
+    def get_time (self):
 
         return self.datetime.strftime ('%H:%M:%S.%f')
 
-    time.short_description = 'time'
-    time.admin_order_field = 'datetime'
+    time = property (get_time)
+    
+    get_time.short_description = 'time'
+    get_time.admin_order_field = 'datetime'
 
     ###########################################################################
     ###########################################################################
     
     def __unicode__ (self):
 
-        return "%s/%s [%.6f,%.6f] @ %s" % (
-            self.pair.quote, self.pair.base, self.ask, self.bid, self.datetime
+        return "%s [%.6f,%.6f] @ %s" % (
+            self.pair, self.ask, self.bid, self.datetime
         )
     
 ###############################################################################

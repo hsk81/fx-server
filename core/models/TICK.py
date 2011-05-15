@@ -8,7 +8,7 @@ __date__ = "$May 8, 2011 12:16:49 PM$"
 
 from django.db import models
 from core.models import *
-import time
+from time import *
 
 ###############################################################################
 ###############################################################################
@@ -55,7 +55,7 @@ class TICK (models.Model):
 
     def get_unixstamp (self):
 
-        return time.mktime (self.datetime.timetuple ())
+        return mktime (self.datetime.timetuple ())
 
     unixstamp = property (get_unixstamp)
 
@@ -95,6 +95,3 @@ class TICK (models.Model):
 if __name__ == "__main__":
 
     pass
-
-###############################################################################
-###############################################################################

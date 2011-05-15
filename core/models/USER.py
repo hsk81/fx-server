@@ -98,10 +98,10 @@ class USER (auth.models.User):
         """
         Returns this USERs unique id number.
         """
-        return self.pk
+        return self.id
 
     ## java.lang.String getUserName()
-    def get_user_name (self):
+    def get_username (self):
         """
         Returns the login username for this USER.
         """
@@ -117,9 +117,7 @@ class USER (auth.models.User):
 
     ## java.lang.String toString()
     def __unicode__ (self):
-        """
-        Returns string representation for this USER.
-        """
+
         return "%s, %s" % (self.last_name, self.first_name)
 
 ###############################################################################

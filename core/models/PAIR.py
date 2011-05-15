@@ -12,7 +12,6 @@ from core.models import *
 ###############################################################################
 ###############################################################################
 
-## public class FXPair Object implements Cloneable
 class PAIR (models.Model):
 
     """

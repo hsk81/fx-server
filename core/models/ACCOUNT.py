@@ -261,11 +261,12 @@ class ACCOUNT (models.Model):
         """
         self.profile = new_profile
 
+    ###########################################################################
+    ###########################################################################
+    
     ## java.lang.String toString()
     def __unicode__ (self):
-        """
-        Returns string representation for this ACCOUNT.
-        """
+        
         return "%s" % self.name
 
 ###############################################################################

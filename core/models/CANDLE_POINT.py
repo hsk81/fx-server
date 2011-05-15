@@ -24,16 +24,12 @@ class CANDLE_POINT (models.Model):
         app_label = 'core'
         verbose_name_plural = 'candle points'
 
-    ## CandlePoint(long timestamp,
-    ##     double open, double close, double min, double max
-    ## )
+    ## CandlePoint(long timestamp, double open, double close, double min, double max)
     def __init__ (self, *args, **kwargs):
-        """
-        ???
-        """
+        
         super (CANDLE_POINT, self).__init__ (*args, **kwargs)
 
-    ## java.lang.Object clone()
+    ## Object clone()
     def clone (self):
         """
         ???
@@ -75,7 +71,7 @@ class CANDLE_POINT (models.Model):
         """
         raise NotImplementedError
 
-    ## java.lang.String toString()
+    ## String toString()
     def __unicode__ (self):
         """
         ???

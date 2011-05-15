@@ -25,24 +25,13 @@ class RATE_TABLE (models.Model):
         app_label = 'core'
         verbose_name_plural = 'rate tables'
 
+    ###########################################################################
+    ###########################################################################
+
     def __init__ (self, *args, **kwargs):
 
         super (RATE_TABLE, self).__init__ (*args, **kwargs)
         self.event_manager = EVENT_MANAGER ()
-
-    ## com.oanda.fxtrade.api.Instrument get(int id)
-    def get_by_id (self, id):
-        """
-        ???
-        """
-        raise NotImplementedError
-
-    ## com.oanda.fxtrade.api.Instrument get(java.lang.String symbol)
-    def get_by_symbol (self, symbol):
-        """
-        ???
-        """
-        raise NotImplementedError
 
     ## java.util.Vector getCandles(FXPair pair, long interval, int numTicks)
     def get_candles (self, pair, interval, num_ticks):
@@ -83,14 +72,17 @@ class RATE_TABLE (models.Model):
         """
         Returns the most recent TICK for the given PAIR.
         """
-        return TICK.objects.filter (pair = pair)[0]
+        return TICK.objects.filter (pair=pair).order_by ('-datetime')[0]
 
     ## boolean loggedIn()
     def logged_in (self):
         """
         Check whether the session is active.
         """
-        raise NotImplementedError
+        return True
+
+###############################################################################
+###############################################################################
 
 if __name__ == "__main__":
 

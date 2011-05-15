@@ -18,7 +18,10 @@ class Command (BaseCommand):
 
     def handle(self, *args, **options):
 
-        from core.models.TICK import TICK
+        ##
+        ## TODO: Implement access from clients using ZMQ!
+        ##
 
+        from core.models.TICK import TICK
         ts = TICK.objects.all ()
         print >> self.stdout, ts

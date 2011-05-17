@@ -84,8 +84,8 @@ class TICK (models.Model):
     
     def __unicode__ (self):
 
-        return "[%.6f,%.6f] @ %s" % (
-            self.bid, self.ask, self.datetime
+        return "[%.6f,%.6f] @ %d" % (
+            self.bid, self.ask, self.unixstamp
         )
     
 ###############################################################################

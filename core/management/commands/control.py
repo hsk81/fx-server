@@ -40,7 +40,7 @@ class Command (BaseCommand):
         workers = context.socket (zmq.XREQ)
         workers.bind (url_worker)
 
-        for id in range (5):
+        for id in range (5): ## number of workers!
 
             thread = threading.Thread (
                 target=self.worker, args=(id, url_worker, context)
@@ -84,28 +84,17 @@ class Command (BaseCommand):
             print >> self.stdout, '[%s] T%02d.REP "%s"' % \
                 (datetime.now (), id, response)
 
-    def process (self, cls, method, args):
+    def process (cls, method, args):
 
-        from core.models import PAIR
+        import core.models
 
-        ##
-        ## TODO: Generalize (reflection) to get instances and methods; further
-        ##       think about message format efficiency!
-        ##
+        try:
+            return getattr (core.models, cls).invoke (cls, method, args)
 
-        if cls == 'PAIR':
-            if method == 'get_halted':
-                try:
-                    q2b = args.split ('/')
-                    pair = PAIR.objects.get (quote = q2b[0], base = q2b[1])
+        except Exception, ex:
+            return 'EXCEPTION|%s' % ex
 
-                    return '%s|%s|%s|%s' % (cls,method,args,pair.get_halted ())
-                except Exception, ex:
-                    return 'EXCEPTION|%s' % ex
-            else:
-                return 'EXCEPTION|no method'
-        else:
-            return 'EXCEPTION|no class'
+    process = staticmethod (process)
 
 ###############################################################################
 ###############################################################################

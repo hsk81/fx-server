@@ -64,6 +64,41 @@ class PAIR (models.Model):
 ###############################################################################
 ###############################################################################
 
+class WRAP:
+
+    def invoke (cls, method, args):
+
+        try:
+            return getattr (WRAP, method)(cls, method, args)
+
+        except Exception, ex:
+            return 'EXCEPTION|%s' % ex
+
+    invoke = staticmethod (invoke)
+
+    def get_halted (cls, method, args):
+
+        try:
+            q2b = args.split ('/')
+            pair = PAIR.objects.get (quote = q2b[0], base = q2b[1])
+
+            return '%s|%s|%s|%s' % (cls, method, args,
+                pair.get_halted ()
+            )
+
+        except Exception, ex:
+            return 'EXCEPTION|%s' % ex
+
+    get_halted = staticmethod (get_halted)
+
+###############################################################################
+###############################################################################
+
+PAIR.invoke = staticmethod (WRAP.invoke)
+
+###############################################################################
+###############################################################################
+
 if __name__ == "__main__":
 
     pass

@@ -13,7 +13,6 @@ from time import *
 ###############################################################################
 ###############################################################################
 
-## public final class FXTick extends Object implements Cloneable
 class TICK (models.Model):
 
     """
@@ -85,8 +84,8 @@ class TICK (models.Model):
     
     def __unicode__ (self):
 
-        return "%s [%.6f,%.6f] @ %s" % (
-            self.pair, self.ask, self.bid, self.datetime
+        return "[%.6f,%.6f] @ %s" % (
+            self.bid, self.ask, self.datetime
         )
     
 ###############################################################################

@@ -74,20 +74,22 @@ class Command (BaseCommand):
             ##
 
             request = socket.recv ()
-            print >> self.stdout, '[%s] T%02d.REQ "%s"' % (datetime.now (), id, request)
+            print >> self.stdout, '[%s] T%02d.REQ "%s"' % \
+                (datetime.now (), id, request)
 
             cls, method, args = request.split('|')
             response = self.process (cls, method, args)
             
             socket.send (response)
-            print >> self.stdout, '[%s] T%02d.REP "%s"' % (datetime.now (), id, response)
+            print >> self.stdout, '[%s] T%02d.REP "%s"' % \
+                (datetime.now (), id, response)
 
     def process (self, cls, method, args):
 
         from core.models import PAIR
 
         ##
-        ## TODO: Generalize (reflection) to get instances and methods! Further
+        ## TODO: Generalize (reflection) to get instances and methods; further
         ##       think about message format efficiency!
         ##
 

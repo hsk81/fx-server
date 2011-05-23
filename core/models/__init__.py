@@ -11,6 +11,7 @@ from STAMP import STAMP
 from ADDRESS import ADDRESS
 from USER import USER
 from ACCOUNT import ACCOUNT
+from SESSION import SESSION
 
 from PAIR import PAIR
 from TICK import TICK

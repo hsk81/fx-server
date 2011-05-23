@@ -40,8 +40,6 @@ class CLIENT (models.Model):
         self.state = None
         self.timeout = None
 
-        self.observers = []
-
     ###########################################################################
     ###########################################################################
 
@@ -105,43 +103,6 @@ class CLIENT (models.Model):
         """
         self.timeout = timeout
     
-    ###########################################################################
-    ###########################################################################
-
-    ##
-    ## TODO: Check implementation with pythonic approaches!
-    ##
-
-    def add_observer (self, observer):
-
-        self.observers.add (observer)
-
-    def count_observers (self):
-
-        return self.observer.count ()
-
-    def delete_observer (self, observer):
-
-        self.observers.remove (observer)
-
-    def delete_observers (self):
-
-        self.observers = []
-
-    def has_changed (self):
-
-        raise NotImplementedError
-
-    def notify_observers (self):
-
-        ##
-        ## TODO: Check parallel approaches!
-        ##
-
-        for observer in self.observers:
-
-            observer.update ()
-
     ###########################################################################
     ###########################################################################
 

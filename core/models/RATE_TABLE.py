@@ -8,6 +8,7 @@ __date__ = "$May 11, 2011 9:18:32 PM$"
 
 from django.db import models
 from core.models import *
+from datetime import *
 
 ###############################################################################
 ###############################################################################
@@ -31,6 +32,8 @@ class RATE_TABLE (models.Model):
     def __init__ (self, *args, **kwargs):
 
         super (RATE_TABLE, self).__init__ (*args, **kwargs)
+        
+        self.ip_address = None
 
     ###########################################################################
     ###########################################################################
@@ -69,19 +72,19 @@ class RATE_TABLE (models.Model):
         """
         raise NotImplementedError
 
-    ## FXTick getRate(FXPair pair)
     def get_rate (self, pair):
-        """
-        Returns the most recent TICK for the given PAIR.
-        """
-        return TICK.objects.filter (pair=pair).order_by ('-datetime')[0]
 
-    ## boolean loggedIn()
+        return TICK.objects.filter (pair = pair).order_by ('-datetime')[0]
+
     def logged_in (self):
-        """
-        Check whether the session is active.
-        """
-        return True
+
+        sessions = SESSION.objects.filter (
+            ip_address = self.ip_address,
+            stamp__insert_date__lt = datetime.now (),
+            stamp__delete_date__isnull = True
+        )
+
+        return bool (sessions)
 
 ###############################################################################
 ###############################################################################
@@ -118,6 +121,25 @@ class WRAP:
             return 'EXCEPTION|%s' % ex
 
     get_rate = staticmethod (get_rate)
+
+    def logged_in (cls, method, args):
+
+        RATE_TABLE.singleton.ip_address = args
+
+        try:
+            result = '%s|%s|%s|%s' % (cls, method, args,
+                RATE_TABLE.singleton.logged_in ()
+            )
+
+        except Exception, ex:
+            return 'EXCEPTION|%s' % ex
+
+        finally:
+            RATE_TABLE.singleton.ip_address = None
+
+        return result
+
+    logged_in = staticmethod (logged_in)
 
 ###############################################################################
 ###############################################################################

@@ -1,7 +1,7 @@
 #! /usr/bin/python
 
 __author__ = "hsk81"
-__date__ = "$Apr 22, 2011 2:50:14 PM$"
+__date__ = "$May 23, 2011 11:28:43 PM$"
 
 ###############################################################################
 ###############################################################################
@@ -12,37 +12,56 @@ from core.models import *
 ###############################################################################
 ###############################################################################
 
-class STAMP (models.Model):
+class SESSION (models.Model):
 
     """
-    An STAMP object represents a stamp with insert, update and delete dates.
+    An SESSION object represents a session.
     """
 
     class Meta:
 
         app_label = 'core'
-        verbose_name_plural = 'stamps'
+        verbose_name_plural = 'sessions'
 
     ###########################################################################
     ###########################################################################
 
     def __init__ (self, *args, **kwargs):
 
-        super (STAMP, self).__init__ (*args, **kwargs)
+        super (SESSION, self).__init__ (*args, **kwargs)
 
     ###########################################################################
     ###########################################################################
 
-    insert_date = models.DateTimeField (auto_now_add = True)
-    update_date = models.DateTimeField (auto_now = True)
-    delete_date = models.DateTimeField (null = True, blank = True)
+    stamp = models.ForeignKey (STAMP)
+    ip_address = models.IPAddressField ()
 
     ###########################################################################
     ###########################################################################
 
     def __unicode__ (self):
 
-        return "%s" % self.insert_date
+        return "[%s] %s" % (self.stamp, self.ip_address)
+
+###############################################################################
+###############################################################################
+
+class WRAP:
+
+    def invoke (cls, method, args):
+
+        try:
+            return getattr (WRAP, method)(cls, method, args)
+
+        except Exception, ex:
+            return 'EXCEPTION|%s' % ex
+
+    invoke = staticmethod (invoke)
+
+###############################################################################
+###############################################################################
+
+SESSION.invoke = staticmethod (WRAP.invoke)
 
 ###############################################################################
 ###############################################################################

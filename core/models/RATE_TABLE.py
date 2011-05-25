@@ -96,24 +96,23 @@ RATE_TABLE.singleton = RATE_TABLE ()
 
 class WRAP:
 
-    def invoke (cls, method, args):
+    def invoke (cls, method, *args):
 
         try:
-            return getattr (WRAP, method)(cls, method, args)
+            return getattr (WRAP, method)(cls, method, *args)
         
         except Exception, ex:
             return 'EXCEPTION|%s' % ex
 
     invoke = staticmethod (invoke)
 
-    def get_rate (cls, method, args):
+    def get_rate (cls, method, quote, base):
 
         try:
-            q2b = args.split ('/')
-            pair = PAIR.objects.get (quote = q2b[0], base = q2b[1])
+            pair = PAIR.objects.get (quote = quote, base = base)
             tick = RATE_TABLE.singleton.get_rate (pair)
 
-            return '%s|%s|%s|%d|%0.6f|%0.6f' % (cls, method, args,
+            return '%s|%s|%s|%s|%d|%0.6f|%0.6f' % (cls, method, quote, base, 
                 tick.unixstamp, tick.bid, tick.ask
             )
 
@@ -122,12 +121,12 @@ class WRAP:
 
     get_rate = staticmethod (get_rate)
 
-    def logged_in (cls, method, args):
+    def logged_in (cls, method, ip_address):
 
-        RATE_TABLE.singleton.ip_address = args
+        RATE_TABLE.singleton.ip_address = ip_address
 
         try:
-            result = '%s|%s|%s|%s' % (cls, method, args,
+            result = '%s|%s|%s|%s' % (cls, method, ip_address,
                 RATE_TABLE.singleton.logged_in ()
             )
 
@@ -140,6 +139,22 @@ class WRAP:
         return result
 
     logged_in = staticmethod (logged_in)
+
+    def get_history (cls, method, quote, base, interval, num_ticks):
+
+        ##
+        ## TODO: Implement properly!
+        ##
+
+        try:
+            return '%s|%s|%s|%s|%s|%s' % (
+                cls, method, quote, base, interval, num_ticks
+            )
+
+        except Exception, ex:
+            return 'EXCEPTION|%s' % ex
+
+    get_history = staticmethod (get_history)
 
 ###############################################################################
 ###############################################################################

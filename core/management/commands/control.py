@@ -77,19 +77,17 @@ class Command (BaseCommand):
             print >> self.stdout, '[%s] T%02d.REQ "%s"' % \
                 (datetime.now (), id, request)
 
-            cls, method, args = request.split('|')
-            response = self.process (cls, method, args)
-            
+            response = self.process (*request.split('|'))            
             socket.send (response)
             print >> self.stdout, '[%s] T%02d.REP "%s"' % \
                 (datetime.now (), id, response)
 
-    def process (cls, method, args):
+    def process (cls, method, *args):
 
         import core.models
 
         try:
-            return getattr (core.models, cls).invoke (cls, method, args)
+            return getattr (core.models, cls).invoke (cls, method, *args)
 
         except Exception, ex:
             return 'EXCEPTION|%s' % ex

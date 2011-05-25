@@ -65,23 +65,22 @@ class PAIR (models.Model):
 
 class WRAP:
 
-    def invoke (cls, method, args):
+    def invoke (cls, method, *args):
 
         try:
-            return getattr (WRAP, method)(cls, method, args)
+            return getattr (WRAP, method)(cls, method, *args)
 
         except Exception, ex:
             return 'EXCEPTION|%s' % ex
 
     invoke = staticmethod (invoke)
 
-    def get_halted (cls, method, args):
+    def get_halted (cls, method, quote, base):
 
         try:
-            q2b = args.split ('/')
-            pair = PAIR.objects.get (quote = q2b[0], base = q2b[1])
+            pair = PAIR.objects.get (quote = quote, base = base)
 
-            return '%s|%s|%s|%s' % (cls, method, args,
+            return '%s|%s|%s|%s|%s' % (cls, method, quote, base,
                 pair.get_halted ()
             )
 

@@ -38,7 +38,7 @@ class HISTORY_POINT (models.Model):
     ##    A flag to indicate whether the FXHistoryPoint has been corrected in the vector context that it is part of.
     ##    FXTick	getMax()
     ##    Returns the FXTick containing the maximum bid and ask price for this FXHistoryPoint.
-    ##    FXTick	getMin() 
+    ##    FXTick	getMin()
     ##    Returns the FXTick containing the minimum bid and ask price for this FXHistoryPoint.
     ##    MinMaxPoint	getMinMaxPoint()
     ##    Returns the associated MinMaxPoint for this FXHistoryPoint.

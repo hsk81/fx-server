@@ -61,7 +61,12 @@ class RATE_TABLE (models.Model):
         currency pair at a given millisecond interval of a particular length
         (num_ticks).
         """
-        raise NotImplementedError
+        opn = TICK.objects.filter (pair = pair).order_by ('-datetime')[0]
+        clo = TICK.objects.filter (pair = pair).order_by ('-datetime')[0]
+        min = TICK.objects.filter (pair = pair).order_by ('-datetime')[0]
+        max = TICK.objects.filter (pair = pair).order_by ('-datetime')[0]
+
+        return [(opn, clo, min, max)] ##TODO!
 
     ## java.util.Vector getMinMaxs(FXPair pair, long interval, int numTicks)
     def get_min_maxs (self, pair, interval, num_ticks):
@@ -73,7 +78,9 @@ class RATE_TABLE (models.Model):
         raise NotImplementedError
 
     def get_rate (self, pair):
-
+        """
+        Returns the most recent TICK for the given PAIR.
+        """
         return TICK.objects.filter (pair = pair).order_by ('-datetime')[0]
 
     def logged_in (self):
@@ -142,13 +149,18 @@ class WRAP:
 
     def get_history (cls, method, quote, base, interval, num_ticks):
 
-        ##
-        ## TODO: Implement properly!
-        ##
-
         try:
-            return '%s|%s|%s|%s|%s|%s' % (
-                cls, method, quote, base, interval, num_ticks
+            history = RATE_TABLE.singleton.get_history (
+                 PAIR.objects.get (quote = quote, base = base), interval, num_ticks
+            )
+
+            ts = ['%d|%0.6f|%0.6f|%0.6f|%0.6f|%0.6f|%0.6f|%0.6f|%0.6f' % (opn.unixstamp,
+                opn.bid, opn.ask, clo.bid, clo.ask,
+                min.bid, min.ask, max.bid, max.ask
+            ) for opn, clo, min, max in history]
+
+            return '%s|%s|%s|%s|%s|%s|%s' % (cls, method,
+                quote, base, interval, num_ticks, '|'.join (ts)
             )
 
         except Exception, ex:

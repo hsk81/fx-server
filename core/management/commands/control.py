@@ -40,7 +40,7 @@ class Command (BaseCommand):
         workers = context.socket (zmq.XREQ)
         workers.bind (url_worker)
 
-        for id in range (5): ## number of workers!
+        for id in range (3): ## number of workers!
 
             thread = threading.Thread (
                 target=self.worker, args=(id, url_worker, context)

@@ -49,7 +49,7 @@ class TICK (models.Model):
     ###########################################################################
     ###########################################################################
     
-    mean = property (lambda self: (self.ask + self.bid) / 2.0)
+    mean = property (lambda self: (self.ask + self.bid) / 2)
     inverse = property (lambda self: TICK (ask=self.bid, bid=self.ask))
 
     def get_unixstamp (self):

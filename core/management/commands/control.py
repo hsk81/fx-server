@@ -1,3 +1,6 @@
+__author__ = "hsk81"
+__date__ = "$May 15, 2011 2:07:29 AM$"
+
 ###############################################################################
 ###############################################################################
 
@@ -17,33 +20,48 @@ class Command (BaseCommand):
     duty is to manage all the incoming control commands.
     """
 
-    args = '<port>'
     help = 'Starts the foreign exchange server control service'
+
+    option_list = BaseCommand.option_list + (
+        make_option ('--uri-client',
+            type='string',
+            action='store',
+            dest='uri_client',
+            default='tcp://*:6666',
+            help='uri for clients [default: %default]'
+        ),
+
+        make_option ('--uri-worker',
+            type='string',
+            action='store',
+            dest='uri_worker',
+            default='inproc://workers:6667',
+            help='uri for worker threads [default: %default]'
+        ),
+    )
 
     def handle(self, *args, **options):
 
-        ##
-        ## TODO: Use proper option parsing!
-        ##
+        print args
+        print options
 
-        self.server ()
+        self.server (
+            options['uri_worker'], options['uri_client']
+        )
         
-    def server (self, port = 6666):
-
-        url_worker = "inproc://workers"
-        url_client = "tcp://*:%s" % port
+    def server (self, uri_worker, uri_client):
 
         context = zmq.Context (1)
 
         clients = context.socket (zmq.XREP)
-        clients.bind (url_client)
+        clients.bind (uri_client)
         workers = context.socket (zmq.XREQ)
-        workers.bind (url_worker)
+        workers.bind (uri_worker)
 
         for id in range (3): ## number of workers!
 
             thread = threading.Thread (
-                target=self.worker, args=(id, url_worker, context)
+                target=self.worker, args=(id, uri_worker, context)
             )
 
             thread.start ()
@@ -62,10 +80,10 @@ class Command (BaseCommand):
             workers.close ()
             context.term ()
 
-    def worker (self, id, url, context):
+    def worker (self, id, uri, context):
 
         socket = context.socket (zmq.REP)
-        socket.connect (url)
+        socket.connect (uri)
 
         while True:
 

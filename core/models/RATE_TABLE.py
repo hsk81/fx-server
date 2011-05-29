@@ -117,10 +117,10 @@ class WRAP:
             pair = PAIR.objects.get (quote = quote, base = base)
             tick = RATE_TABLE.get_rate (pair)
 
-            return '%s|%s|%s|%s|%d|%0.6f|%0.6f' % (cls, method, quote, base, 
+            return '%s|%s|%s|%s|%d|%0.6f|%0.6f' % (cls, method, quote, base,
                 tick.unixstamp, tick.bid, tick.ask
             )
-
+                
         except Exception, ex:
             return 'EXCEPTION|%s' % ex
 
@@ -143,10 +143,10 @@ class WRAP:
     def get_history (cls, method, quote, base, interval, num_ticks):
 
         try:
+            pair = PAIR.objects.get (quote = quote, base = base)
+            
             history = RATE_TABLE.get_history (
-                 PAIR.objects.get (quote = quote, base = base),
-                 int (interval),
-                 int (num_ticks)
+                 pair, int (interval), int (num_ticks)
             )
 
             ts = ['%d|%0.6f|%0.6f|%0.6f|%0.6f|%0.6f|%0.6f|%0.6f|%0.6f' % (

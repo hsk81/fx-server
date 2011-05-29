@@ -14,10 +14,6 @@ from decimal import *
 
 class Command (BaseCommand):
 
-    """
-    The import command imports data from various sources into the FX server.
-    """
-
     help = 'Imports data into the foreign exchange server'
 
     def check_pair (option, opt_str, value, parser):
@@ -56,6 +52,7 @@ class Command (BaseCommand):
                 raise OptionValueError ('PAIR not set')
 
         except OptionValueError as e:
+            
             raise CommandError (e)
         
         else:
@@ -76,6 +73,10 @@ class Command (BaseCommand):
 
         with file:
 
+            ##
+            ## TODO: User logging instead of print >> self.stdout!
+            ##
+            
             print >> self.stdout, "importing ticks for %s from %s .." % (
                 pair, filename
             )

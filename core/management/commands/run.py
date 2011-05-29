@@ -15,15 +15,10 @@ import zmq
 
 class Command (BaseCommand):
 
-    """
-    The control command enables the control service for the FX server. Its main
-    duty is to manage all the incoming control commands.
-    """
-
-    help = 'Starts the foreign exchange server control service'
+    help = 'Runs the foreign exchange server\'s main service'
 
     option_list = BaseCommand.option_list + (
-        make_option ('--uri-client',
+        make_option ('-c', '--uri-client',
             type='string',
             action='store',
             dest='uri_client',
@@ -31,25 +26,32 @@ class Command (BaseCommand):
             help='uri for clients [default: %default]'
         ),
 
-        make_option ('--uri-worker',
+        make_option ('-w', '--uri-worker',
             type='string',
             action='store',
             dest='uri_worker',
-            default='inproc://workers:6667',
+            default='inproc://workers',
             help='uri for worker threads [default: %default]'
         ),
     )
 
     def handle(self, *args, **options):
 
-        print args
-        print options
+        try:
+            if options['uri_client'] == None:
+                raise OptionValueError ('URI_CLIENT not set')
+            if options['uri_worker'] == None:
+                raise OptionValueError ('URI_WORKER not set')
+
+        except OptionValueError as e:
+
+            raise CommandError (e)
 
         self.server (
-            options['uri_worker'], options['uri_client']
+            options['uri_client'], options['uri_worker']
         )
-        
-    def server (self, uri_worker, uri_client):
+
+    def server (self, uri_client, uri_worker):
 
         context = zmq.Context (1)
 
@@ -88,7 +90,7 @@ class Command (BaseCommand):
         while True:
 
             ##
-            ## TODO: User proper logging instead of print >> self.stdout!
+            ## TODO: User logging instead of print >> self.stdout!
             ##
 
             request = socket.recv ()
@@ -100,7 +102,7 @@ class Command (BaseCommand):
             print >> self.stdout, '[%s] T%02d.REP "%s"' % \
                 (datetime.now (), id, response)
 
-    def process (cls, method, *args):
+    def process (self, cls, method, *args):
 
         import core.models
 
@@ -109,8 +111,6 @@ class Command (BaseCommand):
 
         except Exception, ex:
             return 'EXCEPTION|%s' % ex
-
-    process = staticmethod (process)
 
 ###############################################################################
 ###############################################################################

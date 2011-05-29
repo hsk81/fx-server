@@ -84,7 +84,7 @@ class Command (BaseCommand):
             for line in file:
 
                 (d,t,b,a) = line.split (' ')
-                print >> self.stdout, "%s" % (d,t,b,a)
+                print >> self.stdout, (d,t,b,a)
 
                 dts = datetime.strptime ('%s %s' % (d,t), '%d/%m/%y %H:%M:%S')
                 bid = Decimal (b)

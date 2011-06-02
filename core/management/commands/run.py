@@ -79,14 +79,14 @@ class Command (BaseCommand):
         if not isinstance(srvlog_level, int):
             raise CommandError('invalid level: %s' % options['srvlog_level'])
 
-        srvlog = logging.getLogger ('srvlog')
+        srvlog = logging.getLogger ('srv')
         srvlog.setLevel (srvlog_level)
         
         msglog_level = getattr(logging, options['msglog_level'].upper(), None)
         if not isinstance(msglog_level, int):
             raise CommandError('invalid level: %s' % options['msglog_level'])
 
-        msglog = logging.getLogger ('msglog')
+        msglog = logging.getLogger ('msg')
         msglog.setLevel (msglog_level)
 
         try:
@@ -107,7 +107,7 @@ class Command (BaseCommand):
     def server (self, uri_clients, uri_workers, sz_workers, sz_threads):
     ###########################################################################
 
-        srvlog = logging.getLogger ('srvlog')
+        srvlog = logging.getLogger ('srv')
         srvlog.info ('starting server')
 
         srvlog.debug ('initiating ZMQ context')
@@ -160,8 +160,8 @@ class Command (BaseCommand):
     def worker (self, id, uri, context):
     ###########################################################################
 
-        srvlog = logging.getLogger ('srvlog')
-        msglog = logging.getLogger ('msglog')
+        srvlog = logging.getLogger ('srv')
+        msglog = logging.getLogger ('msg')
 
         srvlog.info ('T%02d - worker thread started' % id)
 
@@ -202,7 +202,7 @@ class Command (BaseCommand):
 
         except Exception, ex:
 
-            logging.getLogger ('srvlog').exception (ex)
+            logging.getLogger ('srv').exception (ex)
             return 'EXCEPTION|%s' % ex
 
 ###############################################################################

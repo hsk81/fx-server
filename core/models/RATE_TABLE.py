@@ -103,66 +103,48 @@ class WRAP:
 
     def invoke (cls, method, *args):
 
-        try:
-            return getattr (WRAP, method)(cls, method, *args)
-        
-        except Exception, ex:
-            return 'EXCEPTION|%s' % ex
+        return getattr (WRAP, method)(cls, method, *args)
 
     invoke = staticmethod (invoke)
 
     def get_rate (cls, method, quote, base):
 
-        try:
-            pair = PAIR.objects.get (quote = quote, base = base)
-            tick = RATE_TABLE.get_rate (pair)
+        pair = PAIR.objects.get (quote = quote, base = base)
+        tick = RATE_TABLE.get_rate (pair)
 
-            return '%s|%s|%s|%s|%d|%0.6f|%0.6f' % (cls, method, quote, base,
-                tick.unixstamp, tick.bid, tick.ask
-            )
-                
-        except Exception, ex:
-            return 'EXCEPTION|%s' % ex
+        return '%s|%s|%s|%s|%d|%0.6f|%0.6f' % (cls, method, quote, base,
+            tick.unixstamp, tick.bid, tick.ask
+        )
 
     get_rate = staticmethod (get_rate)
 
     def logged_in (cls, method, ip_address):
 
-        try:
-            result = '%s|%s|%s|%s' % (cls, method, ip_address,
-                RATE_TABLE.logged_in (ip_address)
-            )
-
-        except Exception, ex:
-            return 'EXCEPTION|%s' % ex
-
-        return result
+        return '%s|%s|%s|%s' % (cls, method, ip_address,
+            RATE_TABLE.logged_in (ip_address)
+        )
 
     logged_in = staticmethod (logged_in)
 
     def get_history (cls, method, quote, base, interval, num_ticks):
 
-        try:
-            pair = PAIR.objects.get (quote = quote, base = base)
-            
-            history = RATE_TABLE.get_history (
-                 pair, int (interval), int (num_ticks)
-            )
+        pair = PAIR.objects.get (quote = quote, base = base)
 
-            ts = ['%d|%0.6f|%0.6f|%0.6f|%0.6f|%0.6f|%0.6f|%0.6f|%0.6f' % (
-                opn.unixstamp,
-                opn.bid, opn.ask,
-                clo.bid, clo.ask,
-                min.bid, min.ask,
-                max.bid, max.ask
-            ) for opn, clo, min, max in history]
+        history = RATE_TABLE.get_history (
+             pair, int (interval), int (num_ticks)
+        )
 
-            return '%s|%s|%s|%s|%s|%s|%s' % (cls, method,
-                quote, base, interval, num_ticks, '|'.join (ts)
-            )
+        ts = ['%d|%0.6f|%0.6f|%0.6f|%0.6f|%0.6f|%0.6f|%0.6f|%0.6f' % (
+            opn.unixstamp,
+            opn.bid, opn.ask,
+            clo.bid, clo.ask,
+            min.bid, min.ask,
+            max.bid, max.ask
+        ) for opn, clo, min, max in history]
 
-        except Exception, ex:
-            return 'EXCEPTION|%s' % ex
+        return '%s|%s|%s|%s|%s|%s|%s' % (cls, method,
+            quote, base, interval, num_ticks, '|'.join (ts)
+        )
 
     get_history = staticmethod (get_history)
 

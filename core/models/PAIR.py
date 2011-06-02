@@ -67,25 +67,17 @@ class WRAP:
 
     def invoke (cls, method, *args):
 
-        try:
-            return getattr (WRAP, method)(cls, method, *args)
-
-        except Exception, ex:
-            return 'EXCEPTION|%s' % ex
+        return getattr (WRAP, method)(cls, method, *args)
 
     invoke = staticmethod (invoke)
 
     def get_halted (cls, method, quote, base):
 
-        try:
-            pair = PAIR.objects.get (quote = quote, base = base)
+        pair = PAIR.objects.get (quote = quote, base = base)
 
-            return '%s|%s|%s|%s|%s' % (cls, method, quote, base,
-                pair.get_halted ()
-            )
-
-        except Exception, ex:
-            return 'EXCEPTION|%s' % ex
+        return '%s|%s|%s|%s|%s' % (cls, method, quote, base,
+            pair.get_halted ()
+        )
 
     get_halted = staticmethod (get_halted)
 

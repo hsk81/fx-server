@@ -114,7 +114,9 @@ class Command (BaseCommand):
 
             try:
                 if import_duplicates:
+                    ###########################################################
                     srvlog.info ('importing duplicate ticks')
+                    ###########################################################
                     for line in file:
 
                         (d,t,b,a) = line.split (' '); dts = datetime.strptime (
@@ -133,7 +135,9 @@ class Command (BaseCommand):
                     srvlog.info ('ticks\' import (with duplicates) done')
 
                 else:
-                    srvlog.info ('ignoring duplicate ticks')
+                    ###########################################################
+                    srvlog.info ('ignoring duplicate ticks'); last = None
+                    ###########################################################
                     for line in file:
 
                         (d,t,b,a) = line.split (' '); dts = datetime.strptime (
@@ -157,7 +161,19 @@ class Command (BaseCommand):
 
                         else:
 
-                            srvlog.debug ('%s [!!]' % line[:-1])
+                            if last == line:
+
+                                TICK.objects.create (
+                                    pair=pair, datetime=dts, bid=bid, ask=ask
+                                )
+
+                                srvlog.debug ('%s [ww]' % line[:-1])
+
+                            else:
+
+                                srvlog.debug ('%s [!!]' % line[:-1])
+
+                        last = line
 
                     srvlog.info ('ticks\' import (without duplicates) done')
 

@@ -63,6 +63,14 @@ class Command (BaseCommand):
             default=False,
             help='duplicate ticks (w.r.t. the database) are also imported'
         ),
+
+        make_option('-s', '--sliding-window',
+            type='int',
+            action='store',
+            dest='buffer_size',
+            default=4,
+            help='size of sliding window to filter duplicates'
+        ),
     )
 
     ###########################################################################
@@ -83,15 +91,24 @@ class Command (BaseCommand):
             raise CommandError ('FILE not set')
         if options['pair'] == None:
             raise CommandError ('PAIR not set')
+        if options['import_duplicates'] == None:
+            raise CommandError ('IMPORT_DUPLICATES not set')
+        if options['buffer_size'] == None:
+            raise CommandError ('BUFFER_SIZE not set')
+        if options['buffer_size'] == 0:
+            raise CommandError ('BUFFER_SIZE invalid')
 
         self.text2db (
-            options['pair'], options['file'], options['import_duplicates']
+            options['pair'],
+            options['file'],
+            options['import_duplicates'],
+            options['buffer_size']
         )
 
     ###########################################################################
     ###########################################################################
 
-    def text2db (self, quote2base, filename, import_duplicates):
+    def text2db (self, quote2base, filename, import_duplicates, buffer_size):
 
         srvlog = logging.getLogger ('srv')
         srvlog.info ('"%s" ticks\' import from "%s"' % (quote2base, filename))
@@ -139,7 +156,7 @@ class Command (BaseCommand):
                     ###########################################################
                     srvlog.info ('ignoring duplicate ticks (w.r.t. db)')
                     ###########################################################
-                    slide = [None, None, None, None] ## last four lines
+                    buffer = [None] * buffer_size ## last n lines to buffer
                     for line in file:
 
                         (d,t,b,a) = line.split (' '); dts = datetime.strptime (
@@ -163,7 +180,7 @@ class Command (BaseCommand):
 
                         else:
                             ## is duplicate tick from file (last four lines)?
-                            if slide.count (line) >= ts.count ():
+                            if buffer.count (line) >= ts.count ():
 
                                 TICK.objects.create (
                                     pair=pair, datetime=dts, bid=bid, ask=ask
@@ -175,7 +192,7 @@ class Command (BaseCommand):
 
                                 srvlog.debug ('%s [!!]' % line[:-1])
 
-                        slide.pop (0); slide.append (line)
+                        buffer.pop (0); buffer.append (line)
 
                     ###########################################################
                     srvlog.info ('ticks\' import (without duplicates) done')

@@ -132,15 +132,14 @@ class Command (BaseCommand):
 
                         srvlog.debug ('%s [ok]' % line[:-1])
 
+                    ###########################################################
                     srvlog.info ('ticks\' import (with duplicates) done')
-
+                    ###########################################################
                 else:
                     ###########################################################
                     srvlog.info ('ignoring duplicate ticks (w.r.t. db)')
                     ###########################################################
-
                     slide = [None, None, None, None] ## last four lines
-
                     for line in file:
 
                         (d,t,b,a) = line.split (' '); dts = datetime.strptime (
@@ -178,7 +177,9 @@ class Command (BaseCommand):
 
                         slide.pop (0); slide.append (line)
 
+                    ###########################################################
                     srvlog.info ('ticks\' import (without duplicates) done')
+                    ###########################################################
 
             except KeyboardInterrupt:
                 srvlog.info ('ticks\' import cancelled')

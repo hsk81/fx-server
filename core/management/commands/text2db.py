@@ -61,7 +61,7 @@ class Command (BaseCommand):
             action='store_true',
             dest='import_duplicates',
             default=False,
-            help='duplicate ticks are also imported'
+            help='duplicate ticks (w.r.t. the database) are also imported'
         ),
     )
 
@@ -115,7 +115,7 @@ class Command (BaseCommand):
             try:
                 if import_duplicates:
                     ###########################################################
-                    srvlog.info ('importing duplicate ticks')
+                    srvlog.info ('importing duplicate ticks (w.r.t. db)')
                     ###########################################################
                     for line in file:
 
@@ -136,8 +136,11 @@ class Command (BaseCommand):
 
                 else:
                     ###########################################################
-                    srvlog.info ('ignoring duplicate ticks'); last = None
+                    srvlog.info ('ignoring duplicate ticks (w.r.t. db)')
                     ###########################################################
+
+                    slide = [None, None, None, None] ## last four lines
+
                     for line in file:
 
                         (d,t,b,a) = line.split (' '); dts = datetime.strptime (
@@ -160,8 +163,8 @@ class Command (BaseCommand):
                             srvlog.debug ('%s [ok]' % line[:-1])
 
                         else:
-
-                            if last == line:
+                            ## is duplicate tick from file (last four lines)?
+                            if slide.count (line) >= ts.count ():
 
                                 TICK.objects.create (
                                     pair=pair, datetime=dts, bid=bid, ask=ask
@@ -169,11 +172,11 @@ class Command (BaseCommand):
 
                                 srvlog.debug ('%s [ww]' % line[:-1])
 
-                            else:
+                            else: ## tick seems to be an actual duplicate!
 
                                 srvlog.debug ('%s [!!]' % line[:-1])
 
-                        last = line
+                        slide.pop (0); slide.append (line)
 
                     srvlog.info ('ticks\' import (without duplicates) done')
 

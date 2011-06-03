@@ -179,7 +179,7 @@ class Command (BaseCommand):
                             srvlog.debug ('%s [ok]' % line[:-1])
 
                         else:
-                            ## is duplicate tick from file (last four lines)?
+                            ## is duplicate tick from file (last n lines)?
                             if buffer.count (line) >= ts.count ():
 
                                 TICK.objects.create (

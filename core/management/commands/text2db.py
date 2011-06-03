@@ -5,6 +5,7 @@ __date__ = "$May 29, 2011 5:15:44 PM$"
 ###############################################################################
 
 from django.core.management.base import *
+from django.db.models import *
 from datetime import *
 from decimal import *
 
@@ -57,13 +58,6 @@ class Command (BaseCommand):
             help='fx pair to import for'
         ),
 
-        make_option('-i', '--import-duplicates',
-            action='store_true',
-            dest='import_duplicates',
-            default=False,
-            help='duplicate ticks (w.r.t. the database) are also imported'
-        ),
-
         make_option('-s', '--sliding-window',
             type='int',
             action='store',
@@ -91,112 +85,119 @@ class Command (BaseCommand):
             raise CommandError ('FILE not set')
         if options['pair'] == None:
             raise CommandError ('PAIR not set')
-        if options['import_duplicates'] == None:
-            raise CommandError ('IMPORT_DUPLICATES not set')
         if options['buffer_size'] == None:
             raise CommandError ('BUFFER_SIZE not set')
         if options['buffer_size'] == 0:
             raise CommandError ('BUFFER_SIZE invalid')
 
         self.text2db (
-            options['pair'],
-            options['file'],
-            options['import_duplicates'],
-            options['buffer_size']
+            options['pair'], options['file'], options['buffer_size']
         )
 
     ###########################################################################
     ###########################################################################
 
-    def text2db (self, quote2base, filename, import_duplicates, buffer_size):
+    def text2db (self, q2b, filename, buffer_size, del_duplicates=False):
 
         srvlog = logging.getLogger ('srv')
-        srvlog.info ('"%s" ticks\' import from "%s"' % (quote2base, filename))
+        srvlog.info ('"%s" ticks\' import from "%s"' % (q2b, filename))
 
         from core.models import TICK
         from core.models import PAIR
 
-        srvlog.debug ('querying for pair "%s"' % quote2base)
-        quote, base = quote2base.split ('/')        
+        srvlog.debug ('querying for pair "%s"' % q2b)
+        quote, base = q2b.split ('/')
         pairs = PAIR.objects.filter (quote=quote, base=base)
         if pairs.exists (): pair = pairs[0]
-        else: raise CommandError ('no pair for "%s"' % quote2base)
+        else: raise CommandError ('no pair for "%s"' % q2b)
 
         srvlog.debug ('opening file "%s"' % filename)
         try: file = open (filename)
         except IOError as e: raise CommandError (e)
 
+        #######################################################################
         with file:
-            srvlog.info ('ticks\' import started')
+        #######################################################################
 
             try:
-                if import_duplicates:
-                    ###########################################################
-                    srvlog.info ('importing duplicate ticks (w.r.t. db)')
-                    ###########################################################
-                    for line in file:
+                srvlog.info ('ticks\' import started')
+                ticks = TICK.objects.filter (pair=pair)
 
-                        (d,t,b,a) = line.split (' '); dts = datetime.strptime (
-                            '%s %s' % (d,t), '%d/%m/%y %H:%M:%S'
-                        )
+                tmin, tmax = ticks \
+                    .aggregate (Min ('datetime'), Max ('datetime')) \
+                    .values ()
 
-                        bid = Decimal (b)
-                        ask = Decimal (a)
+                ls = [None] * buffer_size ## last n lines to buffer
+
+                ###############################################################
+                for line in file:
+                ###############################################################
+
+                    (d,t,b,a) = line.split (' '); dts = datetime.strptime (
+                        '%s %s' % (d,t), '%d/%m/%y %H:%M:%S'
+                    )
+
+                    bid = Decimal (b)
+                    ask = Decimal (a)
+
+                    ###########################################################
+                    if tmin != None and dts < tmin: ## interval [:tmin]
+                    ###########################################################
 
                         TICK.objects.create (
                             pair=pair, datetime=dts, bid=bid, ask=ask
                         )
 
-                        srvlog.debug ('%s [ok]' % line[:-1])
+                        srvlog.debug ('%s << [++]' % line[:-1])
 
                     ###########################################################
-                    srvlog.info ('ticks\' import (with duplicates) done')
+                    elif tmax != None and dts <= tmax: ## interval [tmin:tmax]
                     ###########################################################
-                else:
-                    ###########################################################
-                    srvlog.info ('ignoring duplicate ticks (w.r.t. db)')
-                    ###########################################################
-                    buffer = [None] * buffer_size ## last n lines to buffer
-                    for line in file:
 
-                        (d,t,b,a) = line.split (' '); dts = datetime.strptime (
-                            '%s %s' % (d,t), '%d/%m/%y %H:%M:%S'
-                        )
+                        ts = ticks.filter (datetime=dts, bid=bid, ask=ask)
+                        ts_size = ts.count ()
 
-                        bid = Decimal (b)
-                        ask = Decimal (a)
-
-                        ts = TICK.objects.filter (
-                            pair=pair, datetime=dts, bid=bid, ask=ask
-                        )
-
-                        if not ts.exists ():
+                        if ts_size == 0: ## no ticks known yet;
 
                             TICK.objects.create (
                                 pair=pair, datetime=dts, bid=bid, ask=ask
                             )
 
-                            srvlog.debug ('%s [ok]' % line[:-1])
+                            srvlog.debug ('%s :: [++]' % line[:-1])
 
-                        else:
-                            ## is duplicate tick from file (last n lines)?
-                            if buffer.count (line) >= ts.count ():
+                        else: ## is current tick a duplicate?
 
-                                TICK.objects.create (
-                                    pair=pair, datetime=dts, bid=bid, ask=ask
+                            if ls.count (line) >= ts_size: ## looks genuine;
+                            
+                                TICK.objects.create (pair=pair,
+                                    datetime=dts, bid=bid, ask=ask
                                 )
 
-                                srvlog.debug ('%s [ww]' % line[:-1])
+                                srvlog.debug ('%s :: [&&]' % line[:-1])
 
-                            else: ## tick seems to be an actual duplicate!
+                            else: ## seems to be an actual duplicate!
 
-                                srvlog.debug ('%s [!!]' % line[:-1])
+                                srvlog.debug ('%s :: [==]' % line[:-1])
 
-                        buffer.pop (0); buffer.append (line)
+                        ls.pop (0); ls.append (line)
 
                     ###########################################################
-                    srvlog.info ('ticks\' import (without duplicates) done')
+                    else: ## interval [tmax:]
                     ###########################################################
+
+                        TICK.objects.create (
+                            pair=pair, datetime=dts, bid=bid, ask=ask
+                        )
+
+                        srvlog.debug ('%s >> [++]' % line[:-1])
+
+                ###############################################################
+                ###############################################################
+
+                srvlog.info ('ticks\' import done')
+
+            ###################################################################
+            ###################################################################
 
             except KeyboardInterrupt:
                 srvlog.info ('ticks\' import cancelled')
@@ -204,6 +205,9 @@ class Command (BaseCommand):
             except Exception, ex:
                 srvlog.exception (ex)
                 raise CommandError ('ticks\' import failed')
+
+            ###################################################################
+            ###################################################################
 
         srvlog.debug ('file "%s" closed' % filename)
 

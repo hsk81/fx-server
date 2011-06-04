@@ -1,5 +1,5 @@
 __author__ = "hsk81"
-__date__ = "$May 29, 2011 5:15:44 PM$"
+__date__ = "$Jun 5, 2011 12:35:56 AM$"
 
 ###############################################################################
 ###############################################################################
@@ -19,7 +19,7 @@ class Command (BaseCommand):
     ###########################################################################
     ###########################################################################
 
-    help = 'Imports data into the foreign exchange server'
+    help = 'Removes data from the foreign exchange server'
 
     ###########################################################################
     ###########################################################################
@@ -58,12 +58,11 @@ class Command (BaseCommand):
             help='fx pair to import for'
         ),
 
-        make_option('-s', '--sliding-window',
-            type='int',
-            action='store',
-            dest='buffer_size',
-            default=4,
-            help='size of sliding window to filter duplicates'
+        make_option('-a', '--all-ticks-per-line',
+            action='store_true',
+            dest='del_duplicates',
+            default=False,
+            help='causes all matching ticks per file line to be deleted'
         ),
     )
 
@@ -85,22 +84,20 @@ class Command (BaseCommand):
             raise CommandError ('FILE not set')
         if options['pair'] == None:
             raise CommandError ('PAIR not set')
-        if options['buffer_size'] == None:
-            raise CommandError ('BUFFER_SIZE not set')
-        if options['buffer_size'] == 0:
-            raise CommandError ('BUFFER_SIZE invalid')
+        if options['del_duplicates'] == None:
+            raise CommandError ('DEL_DUPLICATES not set')
 
         self.text2db (
-            options['pair'], options['file'], options['buffer_size']
+            options['pair'], options['file'], options['del_duplicates']
         )
 
     ###########################################################################
     ###########################################################################
 
-    def text2db (self, q2b, filename, buffer_size):
+    def text2db (self, q2b, filename, del_duplicates):
 
         srvlog = logging.getLogger ('srv')
-        srvlog.info ('"%s" ticks\' import from "%s"' % (q2b, filename))
+        srvlog.info ('"%s" ticks\' removal from "%s"' % (q2b, filename))
 
         from core.models import TICK
         from core.models import PAIR
@@ -120,14 +117,8 @@ class Command (BaseCommand):
         #######################################################################
 
             try:
-                srvlog.info ('ticks\' import started')
+                srvlog.info ('ticks\' removal started')
                 ticks = TICK.objects.filter (pair=pair)
-
-                tmin, tmax = ticks \
-                    .aggregate (Min ('datetime'), Max ('datetime')) \
-                    .values ()
-
-                ls = [None] * buffer_size ## last n lines to buffer
 
                 ###############################################################
                 for line in file:
@@ -140,71 +131,39 @@ class Command (BaseCommand):
                     bid = Decimal (b)
                     ask = Decimal (a)
 
-                    ###########################################################
-                    if tmin != None and dts < tmin: ## interval [:tmin]
-                    ###########################################################
+                    if del_duplicates:
 
-                        TICK.objects.create (
-                            pair=pair, datetime=dts, bid=bid, ask=ask
-                        )
+                        ticks.filter (datetime=dts, bid=bid, ask=ask).delete ()
+                        srvlog.debug ('%s :: [--]' % line[:-1])
 
-                        srvlog.debug ('%s << [++]' % line[:-1])
-
-                    ###########################################################
-                    elif tmax != None and dts <= tmax: ## interval [tmin:tmax]
-                    ###########################################################
+                    else:
 
                         ts = ticks.filter (datetime=dts, bid=bid, ask=ask)
                         ts_size = ts.count ()
 
-                        if ts_size == 0: ## no ticks known yet;
+                        if ts_size == 0: ## no ticks found;
 
-                            TICK.objects.create (
-                                pair=pair, datetime=dts, bid=bid, ask=ask
-                            )
+                            srvlog.debug ('%s :: [??]' % line[:-1])
 
-                            srvlog.debug ('%s :: [++]' % line[:-1])
+                        else: ## delete only first tick;
 
-                        else: ## is current tick a duplicate?
-
-                            if ls.count (line) >= ts_size: ## looks genuine;
-                            
-                                TICK.objects.create (pair=pair,
-                                    datetime=dts, bid=bid, ask=ask
-                                )
-
-                                srvlog.debug ('%s :: [&&]' % line[:-1])
-
-                            else: ## seems to be an actual duplicate!
-
-                                srvlog.debug ('%s :: [==]' % line[:-1])
-
-                        ls.pop (0); ls.append (line)
-
-                    ###########################################################
-                    else: ## interval [tmax:]
-                    ###########################################################
-
-                        TICK.objects.create (
-                            pair=pair, datetime=dts, bid=bid, ask=ask
-                        )
-
-                        srvlog.debug ('%s >> [++]' % line[:-1])
+                            for t in ts: t.delete (); break
+                            srvlog.debug ('%s :: [--]' % line[:-1])
 
                 ###############################################################
                 ###############################################################
 
-                srvlog.info ('ticks\' import done')
+                srvlog.info ('ticks\' removal done')
 
             ###################################################################
             ###################################################################
 
             except KeyboardInterrupt:
-                srvlog.info ('ticks\' import cancelled')
+                srvlog.info ('ticks\' removal cancelled')
 
             except Exception, ex:
                 srvlog.exception (ex)
-                raise CommandError ('ticks\' import failed')
+                raise CommandError ('ticks\' removal failed')
 
             ###################################################################
             ###################################################################

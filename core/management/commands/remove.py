@@ -97,7 +97,7 @@ class Command (BaseCommand):
     def text2db (self, q2b, filename, del_duplicates):
 
         srvlog = logging.getLogger ('srv')
-        srvlog.info ('"%s" ticks\' removal from "%s"' % (q2b, filename))
+        srvlog.info ('"%s" ticks\' remove from "%s"' % (q2b, filename))
 
         from core.models import TICK
         from core.models import PAIR
@@ -117,7 +117,7 @@ class Command (BaseCommand):
         #######################################################################
 
             try:
-                srvlog.info ('ticks\' removal started')
+                srvlog.info ('ticks\' remove started')
                 ticks = TICK.objects.filter (pair=pair)
 
                 ###############################################################
@@ -153,17 +153,17 @@ class Command (BaseCommand):
                 ###############################################################
                 ###############################################################
 
-                srvlog.info ('ticks\' removal done')
+                srvlog.info ('ticks\' remove done')
 
             ###################################################################
             ###################################################################
 
             except KeyboardInterrupt:
-                srvlog.info ('ticks\' removal cancelled')
+                srvlog.info ('ticks\' remove cancelled')
 
             except Exception, ex:
                 srvlog.exception (ex)
-                raise CommandError ('ticks\' removal failed')
+                raise CommandError ('ticks\' remove failed')
 
             ###################################################################
             ###################################################################

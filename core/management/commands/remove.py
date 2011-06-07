@@ -70,105 +70,107 @@ class Command (BaseCommand):
     ###########################################################################
 
     def handle(self, *args, **options):
-
+        
+        from core.models import PAIR, TICK
+       
         logging.basicConfig (format='[%(asctime)s] %(levelname)s: %(message)s')
-
         srvlog_level = getattr(logging, options['srvlog_level'].upper(), None)
-        if not isinstance(srvlog_level, int):
-            raise CommandError('invalid level: %s' % options['srvlog_level'])
+        if not isinstance (srvlog_level, int):
+
+            raise CommandError ('invalid level: %s' % options['srvlog_level'])
 
         srvlog = logging.getLogger ('srv')
         srvlog.setLevel (srvlog_level)
 
-        if options['file'] == None:
-            raise CommandError ('FILE not set')
-        if options['pair'] == None:
-            raise CommandError ('PAIR not set')
+        if options['file'] == None: raise CommandError ('FILE not set')
+        else: filename = options['file']
+
+        if options['pair'] == None: raise CommandError ('PAIR not set')
+        else: q2b = options['pair']
+
         if options['del_duplicates'] == None:
             raise CommandError ('DEL_DUPLICATES not set')
-
-        self.text2db (
-            options['pair'], options['file'], options['del_duplicates']
-        )
-
-    ###########################################################################
-    ###########################################################################
-
-    def text2db (self, q2b, filename, del_duplicates):
-
-        srvlog = logging.getLogger ('srv')
-        srvlog.info ('"%s" ticks\' remove from "%s"' % (q2b, filename))
-
-        from core.models import TICK
-        from core.models import PAIR
+        else:
+            del_duplicates = options['del_duplicates']
 
         srvlog.debug ('querying for pair "%s"' % q2b)
         quote, base = q2b.split ('/')
-        pairs = PAIR.objects.filter (quote=quote, base=base)
-        if pairs.exists (): pair = pairs[0]
-        else: raise CommandError ('no pair for "%s"' % q2b)
+        try: pair = PAIR.objects.get (quote=quote, base=base)
+        except Exception as e: raise CommandError (e)
 
         srvlog.debug ('opening file "%s"' % filename)
         try: file = open (filename)
         except IOError as e: raise CommandError (e)
 
-        #######################################################################
         with file:
-        #######################################################################
-
-            try:
-                srvlog.info ('ticks\' remove started')
-                ticks = TICK.objects.filter (pair=pair)
-
-                ###############################################################
-                for line in file:
-                ###############################################################
-
-                    (d,t,b,a) = line.split (' '); dts = datetime.strptime (
-                        '%s %s' % (d,t), '%d/%m/%y %H:%M:%S'
-                    )
-
-                    bid = Decimal (b)
-                    ask = Decimal (a)
-
-                    if del_duplicates:
-
-                        ticks.filter (datetime=dts, bid=bid, ask=ask).delete ()
-                        srvlog.debug ('%s :: [--]' % line[:-1])
-
-                    else:
-
-                        ts = ticks.filter (datetime=dts, bid=bid, ask=ask)
-                        ts_size = ts.count ()
-
-                        if ts_size == 0: ## no ticks found;
-
-                            srvlog.debug ('%s :: [??]' % line[:-1])
-
-                        else: ## delete only first tick;
-
-                            for t in ts: t.delete (); break
-                            srvlog.debug ('%s :: [--]' % line[:-1])
-
-                ###############################################################
-                ###############################################################
-
-                srvlog.info ('ticks\' remove done')
-
-            ###################################################################
-            ###################################################################
-
-            except KeyboardInterrupt:
-                srvlog.info ('ticks\' remove cancelled')
-
-            except Exception, ex:
-                srvlog.exception (ex)
-                raise CommandError ('ticks\' remove failed')
-
-            ###################################################################
-            ###################################################################
+            
+            self.text2db (file, pair, del_duplicates)
 
         srvlog.debug ('file "%s" closed' % filename)
+        
+    ###########################################################################
+    ###########################################################################
+
+    def text2db (self, file, pair, del_duplicates):
+
+        from core.models import PAIR, TICK
+
+        srvlog = logging.getLogger ('srv')
+        srvlog.info ('"%s" ticks\' remove from "%s"' % (pair, file))
+        
+        try:
+            
+            srvlog.info ('ticks\' remove started')
+
+            ###################################################################
+            ###################################################################
+
+            ticks = TICK.objects.filter (pair=pair)
+
+            ###################################################################
+            for line in file:
+            ###################################################################
+
+                (d,t,b,a) = line.split (' '); dts = datetime.strptime (
+                    '%s %s' % (d,t), '%d/%m/%y %H:%M:%S'
+                )
+
+                bid = Decimal (b)
+                ask = Decimal (a)
+
+                if del_duplicates:
+
+                    ticks.filter (datetime=dts, bid=bid, ask=ask).delete ()
+                    srvlog.debug ('%s :: [--]' % line[:-1])
+
+                else:
+
+                    ts = ticks.filter (datetime=dts, bid=bid, ask=ask)
+                    ts_size = ts.count ()
+
+                    if ts_size == 0: ## no ticks found;
+
+                        srvlog.debug ('%s :: [??]' % line[:-1])
+
+                    else: ## delete only first tick;
+
+                        for t in ts: t.delete (); break
+                        srvlog.debug ('%s :: [--]' % line[:-1])
+
+            ###################################################################
+            ###################################################################
+
+            srvlog.info ('ticks\' remove done')
+
+        #######################################################################
+        #######################################################################
+
+        except KeyboardInterrupt:
+            srvlog.info ('ticks\' remove cancelled')
+
+        except Exception, ex:
+            srvlog.exception (ex)
+            raise CommandError ('ticks\' remove failed')
 
 ###############################################################################
 ###############################################################################

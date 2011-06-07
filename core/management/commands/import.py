@@ -72,144 +72,146 @@ class Command (BaseCommand):
 
     def handle(self, *args, **options):
 
-        logging.basicConfig (format='[%(asctime)s] %(levelname)s: %(message)s')
+        from core.models import PAIR, TICK
 
+        logging.basicConfig (format='[%(asctime)s] %(levelname)s: %(message)s')
         srvlog_level = getattr(logging, options['srvlog_level'].upper(), None)
-        if not isinstance(srvlog_level, int):
-            raise CommandError('invalid level: %s' % options['srvlog_level'])
+        if not isinstance (srvlog_level, int):
+            
+            raise CommandError ('invalid level: %s' % options['srvlog_level'])
 
         srvlog = logging.getLogger ('srv')
         srvlog.setLevel (srvlog_level)
 
-        if options['file'] == None:
-            raise CommandError ('FILE not set')
-        if options['pair'] == None:
-            raise CommandError ('PAIR not set')
+        if options['file'] == None: raise CommandError ('FILE not set')
+        else: filename = options['file']
+        
+        if options['pair'] == None: raise CommandError ('PAIR not set')
+        else: q2b = options['pair']
+        
         if options['buffer_size'] == None:
             raise CommandError ('BUFFER_SIZE not set')
-        if options['buffer_size'] == 0:
+        elif options['buffer_size'] <= 0:
             raise CommandError ('BUFFER_SIZE invalid')
-
-        self.text2db (
-            options['pair'], options['file'], options['buffer_size']
-        )
-
-    ###########################################################################
-    ###########################################################################
-
-    def text2db (self, q2b, filename, buffer_size):
-
-        srvlog = logging.getLogger ('srv')
-        srvlog.info ('"%s" ticks\' import from "%s"' % (q2b, filename))
-
-        from core.models import TICK
-        from core.models import PAIR
+        else:
+            buffer_size = options['buffer_size']
 
         srvlog.debug ('querying for pair "%s"' % q2b)
         quote, base = q2b.split ('/')
-        pairs = PAIR.objects.filter (quote=quote, base=base)
-        if pairs.exists (): pair = pairs[0]
-        else: raise CommandError ('no pair for "%s"' % q2b)
+        try: pair = PAIR.objects.get (quote=quote, base=base)
+        except Exception as e: raise CommandError (e)
 
         srvlog.debug ('opening file "%s"' % filename)
         try: file = open (filename)
         except IOError as e: raise CommandError (e)
 
-        #######################################################################
         with file:
-        #######################################################################
+            
+            self.text2db (file, pair, buffer_size)
+            
+        srvlog.debug ('file "%s" closed' % filename)
 
-            try:
-                srvlog.info ('ticks\' import started')
-                ticks = TICK.objects.filter (pair=pair)
+    ###########################################################################
+    ###########################################################################
 
-                tmin, tmax = ticks \
-                    .aggregate (Min ('datetime'), Max ('datetime')) \
-                    .values ()
+    def text2db (self, file, pair, buffer_size):
+        
+        from core.models import PAIR, TICK
 
-                ls = [None] * buffer_size ## last n lines to buffer
+        srvlog = logging.getLogger ('srv')
+        srvlog.info ('"%s" ticks\' import from "%s"' % (pair, file))
+
+        try:
+                        
+            srvlog.info ('ticks\' import started')
+            
+            ###################################################################
+            ###################################################################
+
+            ticks = TICK.objects.filter (pair=pair)
+
+            tmin, tmax = ticks \
+                .aggregate (Min ('datetime'), Max ('datetime')) \
+                .values ()
+
+            ls = [None] * buffer_size ## last n lines to buffer
+
+            ###################################################################
+            for line in file:
+            ###################################################################
+
+                (d,t,b,a) = line.split (' '); dts = datetime.strptime (
+                    '%s %s' % (d,t), '%d/%m/%y %H:%M:%S'
+                )
+
+                bid = Decimal (b)
+                ask = Decimal (a)
 
                 ###############################################################
-                for line in file:
+                if tmin != None and dts < tmin: ## interval [:tmin]
                 ###############################################################
 
-                    (d,t,b,a) = line.split (' '); dts = datetime.strptime (
-                        '%s %s' % (d,t), '%d/%m/%y %H:%M:%S'
+                    TICK.objects.create (
+                        pair=pair, datetime=dts, bid=bid, ask=ask
                     )
 
-                    bid = Decimal (b)
-                    ask = Decimal (a)
+                    srvlog.debug ('%s << [++]' % line[:-1])
 
-                    ###########################################################
-                    if tmin != None and dts < tmin: ## interval [:tmin]
-                    ###########################################################
+                ###############################################################
+                elif tmax != None and dts <= tmax: ## interval [tmin:tmax]
+                ###############################################################
+
+                    ts = ticks.filter (datetime=dts, bid=bid, ask=ask)
+                    ts_size = ts.count ()
+
+                    if ts_size == 0: ## no ticks known yet;
 
                         TICK.objects.create (
                             pair=pair, datetime=dts, bid=bid, ask=ask
                         )
 
-                        srvlog.debug ('%s << [++]' % line[:-1])
+                        srvlog.debug ('%s :: [++]' % line[:-1])
 
-                    ###########################################################
-                    elif tmax != None and dts <= tmax: ## interval [tmin:tmax]
-                    ###########################################################
+                    else: ## is current tick a duplicate?
 
-                        ts = ticks.filter (datetime=dts, bid=bid, ask=ask)
-                        ts_size = ts.count ()
+                        if ls.count (line) >= ts_size: ## looks genuine;
 
-                        if ts_size == 0: ## no ticks known yet;
-
-                            TICK.objects.create (
-                                pair=pair, datetime=dts, bid=bid, ask=ask
+                            TICK.objects.create (pair=pair,
+                                datetime=dts, bid=bid, ask=ask
                             )
 
-                            srvlog.debug ('%s :: [++]' % line[:-1])
+                            srvlog.debug ('%s :: [&&]' % line[:-1])
 
-                        else: ## is current tick a duplicate?
+                        else: ## seems to be an actual duplicate!
 
-                            if ls.count (line) >= ts_size: ## looks genuine;
-                            
-                                TICK.objects.create (pair=pair,
-                                    datetime=dts, bid=bid, ask=ask
-                                )
+                            srvlog.debug ('%s :: [==]' % line[:-1])
 
-                                srvlog.debug ('%s :: [&&]' % line[:-1])
-
-                            else: ## seems to be an actual duplicate!
-
-                                srvlog.debug ('%s :: [==]' % line[:-1])
-
-                        ls.pop (0); ls.append (line)
-
-                    ###########################################################
-                    else: ## interval [tmax:]
-                    ###########################################################
-
-                        TICK.objects.create (
-                            pair=pair, datetime=dts, bid=bid, ask=ask
-                        )
-
-                        srvlog.debug ('%s >> [++]' % line[:-1])
+                    ls.pop (0); ls.append (line)
 
                 ###############################################################
+                else: ## interval [tmax:]
                 ###############################################################
 
-                srvlog.info ('ticks\' import done')
+                    TICK.objects.create (
+                        pair=pair, datetime=dts, bid=bid, ask=ask
+                    )
+
+                    srvlog.debug ('%s >> [++]' % line[:-1])
 
             ###################################################################
             ###################################################################
 
-            except KeyboardInterrupt:
-                srvlog.info ('ticks\' import cancelled')
+            srvlog.info ('ticks\' import done')
 
-            except Exception, ex:
-                srvlog.exception (ex)
-                raise CommandError ('ticks\' import failed')
+        #######################################################################
+        #######################################################################
 
-            ###################################################################
-            ###################################################################
+        except KeyboardInterrupt:
+            srvlog.info ('ticks\' import cancelled')
 
-        srvlog.debug ('file "%s" closed' % filename)
+        except Exception, ex:
+            srvlog.exception (ex)
+            raise CommandError ('ticks\' import failed')
 
 ###############################################################################
 ###############################################################################

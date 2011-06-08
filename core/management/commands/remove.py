@@ -116,7 +116,7 @@ class Command (BaseCommand):
         from core.models import PAIR, TICK
 
         srvlog = logging.getLogger ('srv')
-        srvlog.info ('"%s" ticks\' remove from "%s"' % (pair, file))
+        srvlog.info ('"%s" ticks\' remove from "%s"' % (pair, file.name))
         
         try:
             

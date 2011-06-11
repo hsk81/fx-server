@@ -64,12 +64,26 @@ class Command (BaseCommand):
             help='left-hand-side fx pair to import with'
         ),
 
+        make_option ('--lhs-threshold',
+            action='store',
+            dest='lhs_threshold',
+            default=None,
+            help='..'
+        ),
+
         make_option ('--rhs', '--rhs-pair',
             type='string',
             action='callback',
             dest='rhs_pair',
             callback=check_pair,
             help='right-hand-side fx pair to multiply with'
+        ),
+
+        make_option ('--rhs-threshold',
+            action='store',
+            dest='rhs_threshold',
+            default=None,
+            help='..'
         ),
 
         make_option ('-f', '--file',
@@ -126,9 +140,13 @@ class Command (BaseCommand):
 
         if options['lhs_pair'] == None: raise CommandError ('LHS_PAIR not set')
         else: lhs_q2b = options['lhs_pair']
-
         if options['rhs_pair'] == None: raise CommandError ('RHS_PAIR not set')
         else: rhs_q2b = options['rhs_pair']
+
+        if options['lhs_threshold'] == None: lhs_threshold = None
+        else: lhs_threshold = float (options['lhs_threshold'])
+        if options['rhs_threshold'] == None: rhs_threshold = None
+        else: rhs_threshold = float (options['rhs_threshold'])
 
         if options['seed'] == None: raise CommandError ('SEED not set')
         else: seed (options['seed'])
@@ -137,7 +155,7 @@ class Command (BaseCommand):
         rhs_quote, rhs_base = rhs_q2b.split ('/')
 
         if lhs_base != rhs_quote:
-            
+
             raise CommandError ('pairs "%s" and "%s" do not match' % \
                 (lhs_q2b, rhs_q2b)
             )
@@ -176,8 +194,10 @@ class Command (BaseCommand):
 
         with file:
 
-            self.main (
-                file, lhs_pair, rhs_pair, beg_datetime, end_datetime
+            self.main (file,
+                {'lhs':lhs_pair, 'rhs':rhs_pair},
+                {'lhs':lhs_threshold, 'rhs':rhs_threshold},
+                {'beg':beg_datetime, 'end':end_datetime}
             )
             
         srvlog.debug ('file "%s" closed' % filename)
@@ -185,12 +205,15 @@ class Command (BaseCommand):
     ###########################################################################
     ###########################################################################
 
-    def main (self, file, pairs, thresholds, beg_datetime, end_datetime):
+    def main (self, file, pairs, thresholds, datetimes):
 
         from core.models import PAIR, TICK
 
         lhs_pair = pairs['lhs']; lhs_threshold = thresholds['lhs']
         rhs_pair = pairs['rhs']; rhs_threshold = thresholds['rhs']
+
+        beg_datetime = datetimes['beg']
+        end_datetime = datetimes['end']
         
         srvlog = logging.getLogger ('srv')
         srvlog.info ('"%s" times "%s" started' % (lhs_pair, rhs_pair))
@@ -211,8 +234,13 @@ class Command (BaseCommand):
             rhs_count = rhs_ticks.count ()
             rhs_ticks = rhs_ticks.iterator ()
 
-            lhs_threshold = lhs_threshold or lhs_count / (lhs_count+rhs_count)
-            rhs_threshold = rhs_threshold or rhs_count / (lhs_count+rhs_count)
+            if lhs_threshold == None:
+                lhs_threshold = 1.0*lhs_count/(lhs_count+rhs_count)
+            srvlog.debug ('LHS_THRESHOLD = %s' % lhs_threshold)
+
+            if rhs_threshold == None:
+                rhs_threshold = 1.0*rhs_count/(lhs_count+rhs_count)
+            srvlog.debug ('RHS_THRESHOLD = %s' % rhs_threshold)
 
             lhs_tick = lhs_ticks.next ()
             rhs_tick = rhs_ticks.next ()
@@ -232,10 +260,12 @@ class Command (BaseCommand):
                     tar_dts = lhs_dts + (rhs_dts - lhs_dts) / 2
                     tar_dts = tar_dts.strftime ('%d/%m/%y %H:%M:%S')
                     tar_str = '%s %s %s' % (tar_dts, tar_bid, tar_ask)
-                    
-                    if random () < lhs_threshold:
 
-                        print >> file, tar_str; srvlog.debug (tar_str)
+                    if random () <= lhs_threshold:
+
+                        print >> file, 'LHS', tar_str; srvlog.debug (
+                            'LHS[%0.3f] %s' % (lhs_threshold, tar_str)
+                        )
 
                     lhs_tick = lhs_ticks.next ()
 
@@ -244,10 +274,12 @@ class Command (BaseCommand):
                     tar_dts = rhs_dts + (lhs_dts - rhs_dts) / 2
                     tar_dts = tar_dts.strftime ('%d/%m/%y %H:%M:%S')
                     tar_str = '%s %s %s' % (tar_dts, tar_bid, tar_ask)
+                    
+                    if random () <= rhs_threshold:
 
-                    if random () < rhs_threshold:
-
-                        print >> file, tar_str; srvlog.debug (tar_str)
+                        print >> file, 'RHS', tar_str; srvlog.debug (
+                            'RHS[%0.3f] %s' % (rhs_threshold, tar_str)
+                        )
 
                     rhs_tick = rhs_ticks.next ()
 

@@ -185,9 +185,12 @@ class Command (BaseCommand):
     ###########################################################################
     ###########################################################################
 
-    def main (self, file, lhs_pair, rhs_pair, beg_datetime, end_datetime):
+    def main (self, file, pairs, thresholds, beg_datetime, end_datetime):
 
         from core.models import PAIR, TICK
+
+        lhs_pair = pairs['lhs']; lhs_threshold = thresholds['lhs']
+        rhs_pair = pairs['rhs']; rhs_threshold = thresholds['rhs']
         
         srvlog = logging.getLogger ('srv')
         srvlog.info ('"%s" times "%s" started' % (lhs_pair, rhs_pair))
@@ -196,11 +199,20 @@ class Command (BaseCommand):
 
             lhs_ticks = TICK.objects.filter (pair=lhs_pair,
                 datetime__gte=beg_datetime, datetime__lt=end_datetime
-            ).iterator ()
+            )
+
+            lhs_count = lhs_ticks.count ()
+            lhs_ticks = lhs_ticks.iterator ()
 
             rhs_ticks = TICK.objects.filter (pair=rhs_pair,
                 datetime__gte=beg_datetime, datetime__lt=end_datetime
-            ).iterator ()
+            )
+
+            rhs_count = rhs_ticks.count ()
+            rhs_ticks = rhs_ticks.iterator ()
+
+            lhs_threshold = lhs_threshold or lhs_count / (lhs_count+rhs_count)
+            rhs_threshold = rhs_threshold or rhs_count / (lhs_count+rhs_count)
 
             lhs_tick = lhs_ticks.next ()
             rhs_tick = rhs_ticks.next ()
@@ -212,12 +224,16 @@ class Command (BaseCommand):
                 tar_bid = '%0.6f' % (lhs_tick.bid * rhs_tick.bid)
                 tar_ask = '%0.6f' % (lhs_tick.ask * rhs_tick.ask)
 
+                lhs_dts = lhs_tick.datetime
+                rhs_dts = rhs_tick.datetime
+
                 if lhs_tick.datetime < rhs_tick.datetime:
 
-                    tar_dts = lhs_tick.datetime.strftime ('%d/%m/%y %H:%M:%S')
+                    tar_dts = lhs_dts + (rhs_dts - lhs_dts) / 2
+                    tar_dts = tar_dts.strftime ('%d/%m/%y %H:%M:%S')
                     tar_str = '%s %s %s' % (tar_dts, tar_bid, tar_ask)
                     
-                    if random () < 0.5: ##TODO: 0.5 * |lhs_tick|/|rhs_tick|?
+                    if random () < lhs_threshold:
 
                         print >> file, tar_str; srvlog.debug (tar_str)
 
@@ -225,10 +241,11 @@ class Command (BaseCommand):
 
                 else:
 
-                    tar_dts = rhs_tick.datetime.strftime ('%d/%m/%y %H:%M:%S')
+                    tar_dts = rhs_dts + (lhs_dts - rhs_dts) / 2
+                    tar_dts = tar_dts.strftime ('%d/%m/%y %H:%M:%S')
                     tar_str = '%s %s %s' % (tar_dts, tar_bid, tar_ask)
 
-                    if random () < 0.5: ##TODO: 0.5 * |rhs_tick|/|lhs_tick|?
+                    if random () < rhs_threshold:
 
                         print >> file, tar_str; srvlog.debug (tar_str)
 

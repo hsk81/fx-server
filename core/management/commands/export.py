@@ -21,18 +21,17 @@ class Command (BaseCommand):
     ###########################################################################
     ###########################################################################
 
-    help = 'Multiplies to source pairs into a target pair'
+    help = 'Export a target pair directly or from two source pairs'
 
     ###########################################################################
     ###########################################################################
 
     def check_pair (option, opt_str, value, parser):
 
-        if value == None:
-            raise OptionValueError("pair not set")
+        if value != None:
 
-        try: _, _ = value.split ('/')
-        except: raise OptionValueError ("pair '%s' invalid" % value)
+            try: _, _ = value.split ('/')
+            except: raise OptionValueError ("pair '%s' invalid" % value)
 
         setattr(parser.values, option.dest, value)
 
@@ -56,19 +55,22 @@ class Command (BaseCommand):
             help='server\'s general log level [default: %default]'
         ),
         
+        make_option ('-p', '--pair',
+            type='string',
+            action='callback',
+            dest='tar_pair',
+            callback=check_pair,
+            default=None,
+            help='target fx pair to export for [default: %default]'
+        ),
+
         make_option ('--lhs', '--lhs-pair',
             type='string',
             action='callback',
             dest='lhs_pair',
             callback=check_pair,
-            help='left-hand-side fx pair to import with'
-        ),
-
-        make_option ('--lhs-threshold',
-            action='store',
-            dest='lhs_threshold',
             default=None,
-            help='..'
+            help='left-hand-side fx pair to export for [default: %default]'
         ),
 
         make_option ('--rhs', '--rhs-pair',
@@ -76,14 +78,22 @@ class Command (BaseCommand):
             action='callback',
             dest='rhs_pair',
             callback=check_pair,
-            help='right-hand-side fx pair to multiply with'
+            default=None,
+            help='right-hand-side fx pair to export for [default: %default]'
         ),
 
-        make_option ('--rhs-threshold',
+        make_option ('--lhs-likelihood',
             action='store',
-            dest='rhs_threshold',
+            dest='lhs_likelihood',
             default=None,
-            help='..'
+            help='likelihood to export for the lhs pair [default: %default]'
+        ),
+
+        make_option ('--rhs-likelihood',
+            action='store',
+            dest='rhs_likelihood',
+            default=None,
+            help='likelihood to export for the rhs pair [default: %default]'
         ),
 
         make_option ('-f', '--file',
@@ -99,7 +109,7 @@ class Command (BaseCommand):
             dest='start_datetime',
             callback=check_datetime,
             default=None,
-            help='start datetime for source pairs [default: %default]'
+            help='start datetime for pairs [default: %default]'
         ),
 
         make_option ('-e', '--end-datetime',
@@ -107,7 +117,7 @@ class Command (BaseCommand):
             dest='end_datetime',
             callback=check_datetime,
             default=None,
-            help='end datetime for source pairs [default: %default]'
+            help='end datetime for pairs [default: %default]'
         ),
 
         make_option ('-g','--prg-seed',
@@ -120,20 +130,119 @@ class Command (BaseCommand):
     )
 
     ###########################################################################
+    def handle (self, *args, **options):
     ###########################################################################
 
-    def handle(self, *args, **options):
-
-        from core.models import PAIR, TICK
-        
         logging.basicConfig (format='[%(asctime)s] %(levelname)s: %(message)s')
         srvlog_level = getattr (logging, options['srvlog_level'].upper(), None)
         if not isinstance (srvlog_level, int):
-            
+
             raise CommandError ('invalid level: %s' % options['srvlog_level'])
 
         srvlog = logging.getLogger ('srv')
         srvlog.setLevel (srvlog_level)
+
+        if options['tar_pair'] != None:
+            self.handle_export (*args, **options)
+        else: 
+            self.handle_lhsrhs (*args, **options)
+
+    ###########################################################################
+    def handle_export (self, *args, **options):
+    ###########################################################################
+
+        from core.models import PAIR, TICK
+        srvlog = logging.getLogger ('srv')
+
+        if options['file'] == None: filename = sys.stdout.name
+        else: filename = options['file']
+
+        if options['tar_pair'] == None: raise CommandError ('TAR_PAIR not set')
+        else: tar_q2b = options['tar_pair']
+
+        srvlog.debug ('querying for pair "%s"' % tar_q2b)
+        tar_quote, tar_base = tar_q2b.split ('/')
+        try: tar_pair = PAIR.objects.get (quote=tar_quote, base=tar_base)
+        except Exception as e: raise CommandError (e)
+
+        srvlog.debug ('determining start datetime')
+        if options['start_datetime'] != None:
+            beg_datetime = options['start_datetime']
+        else:
+            beg_datetime = TICK.objects.filter (pair=tar_pair) \
+                .aggregate (Min ('datetime')) \
+                .values ()[0] or datetime.min
+
+        srvlog.debug ('determining end datetime')
+        if options['end_datetime'] != None:
+            end_datetime = options['end_datetime']
+        else:
+            end_datetime = datetime.max
+        
+
+        srvlog.debug ('opening file "%s"' % filename)
+        try: file = (filename != sys.stdout.name) and open (filename, 'w') \
+            or sys.stdout
+        except IOError as e: raise CommandError (e)
+
+        with file:
+
+            self.export (file,
+                tar_pair, {'beg':beg_datetime, 'end':end_datetime}
+            )
+
+        srvlog.debug ('file "%s" closed' % filename)
+
+    ###########################################################################
+    def export (self, file, tar_pair, interval):
+    ###########################################################################
+
+        from core.models import PAIR, TICK
+        srvlog = logging.getLogger ('srv')
+        srvlog.info ('export for "%s" started' % tar_pair)
+
+        beg_datetime = interval['beg']
+        srvlog.info ('interval from: %s' % beg_datetime)
+        end_datetime = interval['end'];
+        srvlog.info ('interval till: %s' % end_datetime)
+
+        try:
+
+            tar_ticks = TICK.objects.filter (pair=tar_pair,
+                datetime__gte=beg_datetime, datetime__lt=end_datetime
+            )
+
+            ###################################################################
+            for tar_tick in tar_ticks:
+            ###################################################################
+
+                tar_dts = tar_tick.datetime.strftime ('%d/%m/%y %H:%M:%S')
+                tar_bid = '%0.6f' % tar_tick.bid
+                tar_ask = '%0.6f' % tar_tick.ask
+                tar_str = '%s %s %s' % (tar_dts, tar_bid, tar_ask)
+
+                print >> file, tar_str; srvlog.debug (tar_str)
+
+        #######################################################################
+        #######################################################################
+
+        except KeyboardInterrupt:
+            srvlog.info ('export for "%s" cancelled' % tar_pair)
+
+        except StopIteration, ex:
+            srvlog.debug ('iteration stopped')
+            srvlog.info ('export for "%s" done' % tar_pair)
+
+        except Exception, ex:
+            srvlog.exception (ex)
+            srvlog.info ('export for "%s" failed' % tar_pair)
+
+    ###########################################################################
+    def handle_lhsrhs (self, *args, **options):
+    ###########################################################################
+
+        from core.models import PAIR, TICK        
+        srvlog = logging.getLogger ('srv')
 
         if options['file'] == None: filename = sys.stdout.name
         else: filename = options['file']
@@ -143,10 +252,10 @@ class Command (BaseCommand):
         if options['rhs_pair'] == None: raise CommandError ('RHS_PAIR not set')
         else: rhs_q2b = options['rhs_pair']
 
-        if options['lhs_threshold'] == None: lhs_threshold = None
-        else: lhs_threshold = float (options['lhs_threshold'])
-        if options['rhs_threshold'] == None: rhs_threshold = None
-        else: rhs_threshold = float (options['rhs_threshold'])
+        if options['lhs_likelihood'] == None: lhs_likelihood = None
+        else: lhs_likelihood = float (options['lhs_likelihood'])
+        if options['rhs_likelihood'] == None: rhs_likelihood = None
+        else: rhs_likelihood = float (options['rhs_likelihood'])
 
         if options['seed'] == None: raise CommandError ('SEED not set')
         else: seed (options['seed'])
@@ -179,44 +288,45 @@ class Command (BaseCommand):
             beg_datetime = TICK.objects.filter (pair=tar_pair) \
                 .aggregate (Max ('datetime')) \
                 .values ()[0] or datetime.min
-        srvlog.debug ('start datetime is %s' % beg_datetime)
 
         srvlog.debug ('determining end datetime')
         if options['end_datetime'] != None:
             end_datetime = options['end_datetime']
         else:
-            end_datetime = datetime.now ()
-        srvlog.debug ('end datetime is %s' % end_datetime)
+            end_datetime = datetime.max
 
         srvlog.debug ('opening file "%s"' % filename)
-        try: file = filename != sys.stdout.name and open (filename, 'w') or sys.stdout
+        try: file = filename != sys.stdout.name and open (filename, 'w') \
+            or sys.stdout
         except IOError as e: raise CommandError (e)
 
         with file:
 
-            self.main (file,
+            self.lhsrhs (file,
                 {'lhs':lhs_pair, 'rhs':rhs_pair},
-                {'lhs':lhs_threshold, 'rhs':rhs_threshold},
+                {'lhs':lhs_likelihood, 'rhs':rhs_likelihood},
                 {'beg':beg_datetime, 'end':end_datetime}
             )
             
         srvlog.debug ('file "%s" closed' % filename)
 
     ###########################################################################
+    def lhsrhs (self, file, pairs, thresholds, interval):
     ###########################################################################
 
-    def main (self, file, pairs, thresholds, datetimes):
-
         from core.models import PAIR, TICK
-
-        lhs_pair = pairs['lhs']; lhs_threshold = thresholds['lhs']
-        rhs_pair = pairs['rhs']; rhs_threshold = thresholds['rhs']
-
-        beg_datetime = datetimes['beg']
-        end_datetime = datetimes['end']
         
-        srvlog = logging.getLogger ('srv')
-        srvlog.info ('"%s" times "%s" started' % (lhs_pair, rhs_pair))
+        lhs_pair = pairs['lhs']; lhs_likelihood = thresholds['lhs']
+        rhs_pair = pairs['rhs']; rhs_likelihood = thresholds['rhs']
+        
+        srvlog = logging.getLogger ('srv'); srvlog.info (
+            u'export for "%s \u00D7 %s" started' % (lhs_pair, rhs_pair)
+        )
+
+        beg_datetime = interval['beg']
+        srvlog.info ('interval from: %s' % beg_datetime)
+        end_datetime = interval['end']
+        srvlog.info ('interval till: %s' % end_datetime)
         
         try:
 
@@ -234,13 +344,10 @@ class Command (BaseCommand):
             rhs_count = rhs_ticks.count ()
             rhs_ticks = rhs_ticks.iterator ()
 
-            if lhs_threshold == None:
-                lhs_threshold = 1.0*lhs_count/(lhs_count+rhs_count)
-            srvlog.debug ('LHS_THRESHOLD = %s' % lhs_threshold)
-
-            if rhs_threshold == None:
-                rhs_threshold = 1.0*rhs_count/(lhs_count+rhs_count)
-            srvlog.debug ('RHS_THRESHOLD = %s' % rhs_threshold)
+            if lhs_likelihood == None:
+                lhs_likelihood = 1.0*lhs_count/(lhs_count+rhs_count)
+            if rhs_likelihood == None:
+                rhs_likelihood = 1.0*rhs_count/(lhs_count+rhs_count)
 
             lhs_tick = lhs_ticks.next ()
             rhs_tick = rhs_ticks.next ()
@@ -261,10 +368,10 @@ class Command (BaseCommand):
                     tar_dts = tar_dts.strftime ('%d/%m/%y %H:%M:%S')
                     tar_str = '%s %s %s' % (tar_dts, tar_bid, tar_ask)
 
-                    if random () <= lhs_threshold:
+                    if random () <= lhs_likelihood:
 
-                        print >> file, 'LHS', tar_str; srvlog.debug (
-                            'LHS[%0.3f] %s' % (lhs_threshold, tar_str)
+                        print >> file, tar_str; srvlog.debug (
+                            '%s L [%s]' % (tar_str, lhs_pair)
                         )
 
                     lhs_tick = lhs_ticks.next ()
@@ -275,10 +382,10 @@ class Command (BaseCommand):
                     tar_dts = tar_dts.strftime ('%d/%m/%y %H:%M:%S')
                     tar_str = '%s %s %s' % (tar_dts, tar_bid, tar_ask)
                     
-                    if random () <= rhs_threshold:
+                    if random () <= rhs_likelihood:
 
-                        print >> file, 'RHS', tar_str; srvlog.debug (
-                            'RHS[%0.3f] %s' % (rhs_threshold, tar_str)
+                        print >> file, tar_str; srvlog.debug (
+                            '%s R [%s]' % (tar_str, rhs_pair)
                         )
 
                     rhs_tick = rhs_ticks.next ()
@@ -287,15 +394,19 @@ class Command (BaseCommand):
         #######################################################################
 
         except KeyboardInterrupt:
-            srvlog.info ('"%s" times "%s" cancelled' % (lhs_pair, rhs_pair))
+            srvlog.info (
+                u'export for "%s \u00D7 %s" cancelled' % (lhs_pair, rhs_pair)
+            )
 
         except StopIteration, ex:
-            srvlog.debug ('iteration stopped')
-            srvlog.info ('"%s" times "%s" done' % (lhs_pair, rhs_pair))
+            srvlog.debug ('iteration stopped'); srvlog.info (
+                u'export for "%s \u00D7 %s" done' % (lhs_pair,rhs_pair)
+            )
 
         except Exception, ex:
-            srvlog.exception (ex)
-            srvlog.info ('"%s" times "%s" failed' % (lhs_pair, rhs_pair))
+            srvlog.exception (ex); srvlog.info (
+                u'export for "%s \u00D7 %s" failed' % (lhs_pair, rhs_pair)
+            )
 
 ###############################################################################
 ###############################################################################

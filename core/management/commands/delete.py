@@ -69,7 +69,7 @@ class Command (BaseCommand):
     ###########################################################################
     ###########################################################################
 
-    def handle(self, *args, **options):
+    def handle (self, *args, **options):
         
         from core.models import PAIR, TICK
        
@@ -104,14 +104,14 @@ class Command (BaseCommand):
 
         with file:
             
-            self.text2db (file, pair, del_duplicates)
+            self.delete (file, pair, del_duplicates)
 
         srvlog.debug ('file "%s" closed' % filename)
         
     ###########################################################################
     ###########################################################################
 
-    def text2db (self, file, pair, del_duplicates):
+    def delete (self, file, pair, del_duplicates):
 
         from core.models import PAIR, TICK
 
@@ -157,20 +157,32 @@ class Command (BaseCommand):
                         for t in ts: t.delete (); break
                         srvlog.debug ('%s :: [--]' % line[:-1])
 
-            ###################################################################
-            ###################################################################
-
-            srvlog.info ('ticks\' remove done')
-
         #######################################################################
         #######################################################################
 
         except KeyboardInterrupt:
+            
+            srvlog.debug ('transaction rollback started')
+            transaction.rollback ()
+            srvlog.debug ('transaction rollback stopped')
             srvlog.info ('ticks\' remove cancelled')
 
         except Exception, ex:
-            srvlog.exception (ex)
-            raise CommandError ('ticks\' remove failed')
+
+            srvlog.debug ('transaction rollback started')
+            transaction.rollback ()
+            srvlog.debug ('transaction rollback stopped')
+
+            srvlog.exception (ex); raise CommandError (
+                'ticks\' remove crashed'
+            )
+
+        else:
+            
+            srvlog.debug ('transaction commit started')
+            transaction.commit ()
+            srvlog.debug ('transaction commit stopped')
+            srvlog.info ('ticks\' remove stopped')
 
 ###############################################################################
 ###############################################################################

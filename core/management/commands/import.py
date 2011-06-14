@@ -5,6 +5,7 @@ __date__ = "$May 29, 2011 5:15:44 PM$"
 ###############################################################################
 
 from django.core.management.base import *
+from django.db import transaction
 from django.db.models import *
 from datetime import *
 from decimal import *
@@ -107,14 +108,15 @@ class Command (BaseCommand):
 
         with file:
             
-            self.text2db (file, pair, buffer_size)
+            self.import2db (file, pair, buffer_size)
             
         srvlog.debug ('file "%s" closed' % filename)
 
     ###########################################################################
     ###########################################################################
 
-    def text2db (self, file, pair, buffer_size):
+    @transaction.commit_manually
+    def import2db (self, file, pair, buffer_size):
         
         from core.models import PAIR, TICK
 
@@ -128,11 +130,15 @@ class Command (BaseCommand):
             ###################################################################
             ###################################################################
 
+            srvlog.debug ('ticks\' filtering for "%s" started' % pair)
             ticks = TICK.objects.filter (pair=pair)
+            srvlog.debug ('ticks\' filtering for "%s" stopped' % pair)
 
+            srvlog.debug ('ticks\' min/max datetime search started')
             tmin, tmax = ticks \
                 .aggregate (Min ('datetime'), Max ('datetime')) \
                 .values ()
+            srvlog.debug ('ticks\' min/max datetime search stopped')
 
             ls = [None] * buffer_size ## last n lines to buffer
 
@@ -198,20 +204,32 @@ class Command (BaseCommand):
 
                     srvlog.debug ('%s >> [++]' % line[:-1])
 
-            ###################################################################
-            ###################################################################
-
-            srvlog.info ('ticks\' import done')
-
         #######################################################################
         #######################################################################
 
         except KeyboardInterrupt:
+
+            srvlog.debug ('transaction rollback started')
+            transaction.rollback ()
+            srvlog.debug ('transaction rollback stopped')
             srvlog.info ('ticks\' import cancelled')
 
         except Exception, ex:
-            srvlog.exception (ex)
-            raise CommandError ('ticks\' import failed')
+
+            srvlog.debug ('transaction rollback started')
+            transaction.rollback ()
+            srvlog.debug ('transaction rollback stopped')
+
+            srvlog.exception (ex); raise CommandError (
+                'ticks\' import crashed'
+            )
+
+        else:
+            
+            srvlog.debug ('transaction commit started')
+            transaction.commit ()
+            srvlog.debug ('transaction commit stopped')
+            srvlog.info ('ticks\' import stopped')
 
 ###############################################################################
 ###############################################################################

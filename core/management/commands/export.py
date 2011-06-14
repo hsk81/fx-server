@@ -5,6 +5,7 @@ __date__ = "$Jun 6, 2011 10:28:06 AM$"
 ###############################################################################
 
 from django.core.management.base import *
+from django.db import transaction
 from django.db.models import *
 from datetime import *
 from decimal import *
@@ -193,7 +194,8 @@ class Command (BaseCommand):
 
         srvlog.debug ('file "%s" closed' % filename)
 
-    ###########################################################################
+    ###########################################################################    
+    @transaction.commit_manually
     def export (self, file, tar_pair, interval):
     ###########################################################################
 
@@ -227,15 +229,32 @@ class Command (BaseCommand):
         #######################################################################
 
         except KeyboardInterrupt:
+            
+            srvlog.debug ('transaction rollback started')
+            transaction.rollback ()
+            srvlog.debug ('transaction rollback stopped')
+
             srvlog.info ('export for "%s" cancelled' % tar_pair)
 
         except StopIteration, ex:
+
             srvlog.debug ('iteration stopped')
-            srvlog.info ('export for "%s" done' % tar_pair)
+            srvlog.debug ('transaction commit started')
+            transaction.commit ()
+
+            srvlog.debug ('transaction commit stopped'); srvlog.info (
+                'export for "%s" stopped' % tar_pair
+            )
 
         except Exception, ex:
-            srvlog.exception (ex)
-            srvlog.info ('export for "%s" failed' % tar_pair)
+
+            srvlog.debug ('transaction rollback started')
+            transaction.rollback ()
+            srvlog.debug ('transaction rollback stopped')
+
+            srvlog.exception (ex); raise CommandError (
+                'export for "%s" crashed' % tar_pair
+            )
 
     ###########################################################################
     def handle_lhsrhs (self, *args, **options):
@@ -311,6 +330,7 @@ class Command (BaseCommand):
         srvlog.debug ('file "%s" closed' % filename)
 
     ###########################################################################
+    @transaction.commit_manually
     def lhsrhs (self, file, pairs, thresholds, interval):
     ###########################################################################
 
@@ -394,18 +414,33 @@ class Command (BaseCommand):
         #######################################################################
 
         except KeyboardInterrupt:
+
+            srvlog.debug ('transaction rollback started')
+            transaction.rollback ()
+            srvlog.debug ('transaction rollback stopped')
+            
             srvlog.info (
                 u'export for "%s \u00D7 %s" cancelled' % (lhs_pair, rhs_pair)
             )
 
         except StopIteration, ex:
+
+            srvlog.debug ('transaction commit started')
+            transaction.commit ()
+            srvlog.debug ('transaction commit stopped')
+
             srvlog.debug ('iteration stopped'); srvlog.info (
-                u'export for "%s \u00D7 %s" done' % (lhs_pair,rhs_pair)
+                u'export for "%s \u00D7 %s" stopped' % (lhs_pair,rhs_pair)
             )
 
         except Exception, ex:
-            srvlog.exception (ex); srvlog.info (
-                u'export for "%s \u00D7 %s" failed' % (lhs_pair, rhs_pair)
+            
+            srvlog.debug ('transaction rollback started')
+            transaction.rollback ()
+            srvlog.debug ('transaction rollback stopped')
+            
+            srvlog.exception (ex); raise CommandError (
+                u'export for "%s \u00D7 %s" crashed' % (lhs_pair, rhs_pair)
             )
 
 ###############################################################################

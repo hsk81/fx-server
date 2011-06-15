@@ -34,7 +34,7 @@ class TICK (models.Model):
     ###########################################################################
     ###########################################################################
 
-    datetime = models.DateTimeField ()
+    datetime = models.DateTimeField (db_index=True)
 
     ask = models.DecimalField (
         max_digits=9, decimal_places=6, default=0.000000

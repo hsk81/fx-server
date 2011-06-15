@@ -13,7 +13,6 @@ from core.models import *
 ###############################################################################
 ###############################################################################
 
-## public abstract class FXEventManager extends java.lang.Object
 class EVENT_MANAGER (models.Model):
 
     """
@@ -33,7 +32,6 @@ class EVENT_MANAGER (models.Model):
         self.uuid = uuid ()
         self.events = []
 
-    ##  boolean add(FXEvent e)
     def add (self, event):
         """
         Add an EVENT to this EVENT_MANAGER, to be notified of incoming
@@ -41,14 +39,12 @@ class EVENT_MANAGER (models.Model):
         """
         self.events.append (event)
 
-    ##  java.util.Vector getEvents()
     def get_events (self):
         """
         Gets the list of events currently registered to this EVENT_MANAGER.
         """
         return self.events
     
-    ##  boolean remove(FXEvent e)
     def remove (self, event):
         """
         Remove an EVENT from this EVENT_MANAGER, denying further notifications.

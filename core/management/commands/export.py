@@ -450,8 +450,12 @@ class Command (BaseCommand):
 
             if lhs_likelihood == None or rhs_likelihood == None:
 
-                lhs_likelihood = 1.0*lhs_count / (lhs_count+rhs_count)
-                rhs_likelihood = 1.0*rhs_count / (lhs_count+rhs_count)
+                if lhs_count+rhs_count > 0:
+                    lhs_likelihood = 1.0*lhs_count / (lhs_count+rhs_count)
+                    rhs_likelihood = 1.0*rhs_count / (lhs_count+rhs_count)
+		else:
+                    lhs_likelihood = 0.0
+                    rhs_likelihood = 0.0
 
             srvlog.debug ("lhs ticks' iterator started")
             lhs_ticks = lhs_ticks.iterator (); lhs_tick = lhs_ticks.next ()
@@ -462,7 +466,7 @@ class Command (BaseCommand):
             srvlog.debug ("rhs ticks' iterator stopped")
 
             ###################################################################
-            while True:
+            while lhs_count+rhs_count > 0:
             ###################################################################
 
                 tar_bid = '%0.6f' % (lhs_tick.bid * rhs_tick.bid)

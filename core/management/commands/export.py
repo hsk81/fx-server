@@ -316,7 +316,6 @@ class Command (BaseCommand):
         srvlog.debug ('file "%s" closed' % filename)
 
     ###########################################################################
-    @transaction.commit_manually
     def lhsrhs (self, file, pairs, thresholds, interval):
     ###########################################################################
 

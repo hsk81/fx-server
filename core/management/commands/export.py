@@ -104,20 +104,66 @@ class Command (BaseCommand):
             help='file to export to [default: %default]'
         ),
 
-        make_option ('-s', '--start-datetime',
+        make_option ('-b', '--beg-datetime',
+            type='string',
             action='callback',
-            dest='start_datetime',
+            dest='beg_datetime',
             callback=check_datetime,
             default=None,
-            help='start datetime for pairs [default: %default]'
+            help='beg datetime for pairs [default: %default]'
         ),
-
         make_option ('-e', '--end-datetime',
+            type='string',
             action='callback',
             dest='end_datetime',
             callback=check_datetime,
             default=None,
             help='end datetime for pairs [default: %default]'
+        ),
+
+        make_option ('--beg-delta-day',
+            type='int',
+            action='store',
+            dest='beg_delta_day',
+            default=None,
+            help='beg is beg datetime plus delta day [default: %default]'
+        ),
+        make_option ('--end-delta-day',
+            type='int',
+            action='store',
+            dest='end_delta_day',
+            default=None,
+            help='end is beg datetime plus delta day [default: %default]'
+        ),
+
+        make_option ('--beg-delta-min',
+            type='int',
+            action='store',
+            dest='beg_delta_min',
+            default=None,
+            help='beg is beg datetime plus delta min [default: %default]'
+        ),
+        make_option ('--end-delta-min',
+            type='int',
+            action='store',
+            dest='end_delta_min',
+            default=None,
+            help='end is beg datetime plus delta min [default: %default]'
+        ),
+
+        make_option ('--beg-delta-sec',
+            type='int',
+            action='store',
+            dest='beg_delta_sec',
+            default=None,
+            help='beg is beg datetime plus delta sec [default: %default]'
+        ),
+        make_option ('--end-delta-sec',
+            type='int',
+            action='store',
+            dest='end_delta_sec',
+            default=None,
+            help='end is beg datetime plus delta sec [default: %default]'
         ),
 
         make_option ('-g','--prg-seed',
@@ -165,9 +211,9 @@ class Command (BaseCommand):
         try: tar_pair = PAIR.objects.get (quote=tar_quote, base=tar_base)
         except Exception as e: raise CommandError (e)
 
-        srvlog.debug ('determining start datetime')
-        if options['start_datetime'] != None:
-            beg_datetime = options['start_datetime']
+        srvlog.debug ('determining beg datetime')
+        if options['beg_datetime'] != None:
+            beg_datetime = options['beg_datetime']
         else:
             beg_datetime = TICK.objects.filter (pair=tar_pair) \
                 .aggregate (Min ('datetime')) \
@@ -178,7 +224,32 @@ class Command (BaseCommand):
             end_datetime = options['end_datetime']
         else:
             end_datetime = datetime.max
-        
+
+        if options['beg_delta_day'] != None: beg_dday = options['beg_delta_day']
+        else:                                beg_dday = 0
+        if options['beg_delta_min'] != None: beg_dmin = options['beg_delta_min']
+        else:                                beg_dmin = 0
+        if options['beg_delta_sec'] != None: beg_dsec = options['beg_delta_sec']
+        else:                                beg_dsec = 0
+
+        if beg_dday > 0 or beg_dmin > 0 or beg_dsec > 0:
+
+            beg_datetime = beg_datetime + timedelta (
+                beg_dday, 60*beg_dmin+beg_dsec
+            )
+
+        if options['end_delta_day'] != None: end_dday = options['end_delta_day']
+        else:                                end_dday = 0
+        if options['end_delta_min'] != None: end_dmin = options['end_delta_min']
+        else:                                end_dmin = 0
+        if options['end_delta_sec'] != None: end_dsec = options['end_delta_sec']
+        else:                                end_dsec = 0
+
+        if end_dday > 0 or end_dmin > 0 or end_dsec > 0:
+
+            end_datetime = beg_datetime + timedelta (
+                end_dday, 60*end_dmin+end_dsec
+            )
 
         srvlog.debug ('opening file "%s"' % filename)
         try: file = (filename != sys.stdout.name) and open (filename, 'w') \
@@ -287,8 +358,8 @@ class Command (BaseCommand):
         except Exception as e: raise CommandError (e)
 
         srvlog.debug ('determining start datetime')
-        if options['start_datetime'] != None:
-            beg_datetime = options['start_datetime']
+        if options['beg_datetime'] != None:
+            beg_datetime = options['beg_datetime']
         else:
             beg_datetime = TICK.objects.filter (pair=tar_pair) \
                 .aggregate (Max ('datetime')) \
@@ -299,6 +370,32 @@ class Command (BaseCommand):
             end_datetime = options['end_datetime']
         else:
             end_datetime = datetime.max
+
+        if options['beg_delta_day'] != None: beg_dday = options['beg_delta_day']
+        else:                                beg_dday = 0
+        if options['beg_delta_min'] != None: beg_dmin = options['beg_delta_min']
+        else:                                beg_dmin = 0
+        if options['beg_delta_sec'] != None: beg_dsec = options['beg_delta_sec']
+        else:                                beg_dsec = 0
+
+        if beg_dday > 0 or beg_dmin > 0 or beg_dsec > 0:
+
+            beg_datetime = beg_datetime + timedelta (
+                beg_dday, 60*beg_dmin+beg_dsec
+            )
+
+        if options['end_delta_day'] != None: end_dday = options['end_delta_day']
+        else:                                end_dday = 0
+        if options['end_delta_min'] != None: end_dmin = options['end_delta_min']
+        else:                                end_dmin = 0
+        if options['end_delta_sec'] != None: end_dsec = options['end_delta_sec']
+        else:                                end_dsec = 0
+
+        if end_dday > 0 or end_dmin > 0 or end_dsec > 0:
+
+            end_datetime = beg_datetime + timedelta (
+                end_dday, 60*end_dmin+end_dsec
+            )
 
         srvlog.debug ('opening file "%s"' % filename)
         try: file = filename != sys.stdout.name and open (filename, 'w') \
@@ -335,27 +432,34 @@ class Command (BaseCommand):
         
         try:
 
-            lhs_ticks = TICK.objects.filter (pair=lhs_pair,
+            lhs_ticks = TICK.objects.filter (pair=lhs_pair, 
                 datetime__gte=beg_datetime, datetime__lt=end_datetime
             )
 
-            lhs_count = lhs_ticks.count ()
-            lhs_ticks = lhs_ticks.iterator ()
-
-            rhs_ticks = TICK.objects.filter (pair=rhs_pair,
+            rhs_ticks = TICK.objects.filter (pair=rhs_pair, 
                 datetime__gte=beg_datetime, datetime__lt=end_datetime
             )
 
-            rhs_count = rhs_ticks.count ()
-            rhs_ticks = rhs_ticks.iterator ()
+            srvlog.debug ("lhs ticks' count started")
+            lhs_count = lhs_ticks.count (); srvlog.debug ("lhs count: %s" % lhs_count)
+            srvlog.debug ("lhs ticks' count stopped")
 
-            if lhs_likelihood == None:
-                lhs_likelihood = 1.0*lhs_count/(lhs_count+rhs_count)
-            if rhs_likelihood == None:
-                rhs_likelihood = 1.0*rhs_count/(lhs_count+rhs_count)
+            srvlog.debug ("rhs ticks' count started")
+            rhs_count = rhs_ticks.count (); srvlog.debug ("rhs count: %s" % rhs_count)
+            srvlog.debug ("rhs ticks' count stopped")
 
-            lhs_tick = lhs_ticks.next ()
-            rhs_tick = rhs_ticks.next ()
+            if lhs_likelihood == None or rhs_likelihood == None:
+
+                lhs_likelihood = 1.0*lhs_count / (lhs_count+rhs_count)
+                rhs_likelihood = 1.0*rhs_count / (lhs_count+rhs_count)
+
+            srvlog.debug ("lhs ticks' iterator started")
+            lhs_ticks = lhs_ticks.iterator (); lhs_tick = lhs_ticks.next ()
+            srvlog.debug ("lhs ticks' iterator stopped")
+
+            srvlog.debug ("rhs ticks' iterator started")
+            rhs_ticks = rhs_ticks.iterator (); rhs_tick = rhs_ticks.next ()
+            srvlog.debug ("rhs ticks' iterator stopped")
 
             ###################################################################
             while True:
@@ -407,7 +511,7 @@ class Command (BaseCommand):
         except StopIteration, ex:
 
             srvlog.debug ('iteration stopped'); srvlog.info (
-                u'export for "%s \u00D7 %s" stopped' % (lhs_pair,rhs_pair)
+                u'export for "%s \u00D7 %s" stopped' % (lhs_pair, rhs_pair)
             )
 
         except Exception, ex:

@@ -46,6 +46,9 @@ class Command (BaseCommand):
 
         setattr(parser.values, option.dest, result)
 
+    ###########################################################################
+    ###########################################################################
+    
     option_list = BaseCommand.option_list + (
         make_option ('-l', '--general-log-level',
             type='string',

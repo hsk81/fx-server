@@ -76,9 +76,8 @@ class Command (BaseCommand):
     )
 
     ###########################################################################
+    def handle(self, *args, **options):
     ###########################################################################
-
-    def handle(self, *args, **options):        
 
         logging.basicConfig (format='[%(asctime)s] %(levelname)s: %(message)s')
 
@@ -111,9 +110,8 @@ class Command (BaseCommand):
             srvlog.exception (ex)
             
     ###########################################################################
-    ###########################################################################
-
     def server (self, uri_clients, uri_workers, sz_workers, sz_threads):
+    ###########################################################################
 
         srvlog = logging.getLogger ('srv')
         srvlog.info ('starting server')
@@ -165,9 +163,8 @@ class Command (BaseCommand):
             srvlog.info ('server shut down')
 
     ###########################################################################
-    ###########################################################################
-
     def worker (self, id, uri, context):
+    ###########################################################################
 
         srvlog = logging.getLogger ('srv')
         msglog = logging.getLogger ('msg')
@@ -201,9 +198,8 @@ class Command (BaseCommand):
         srvlog.info ('T%02d - worker thread stopped' % id)
 
     ###########################################################################
-    ###########################################################################
-
     def process (self, cls, method, *args):
+    ###########################################################################
 
         import core.models
         try:

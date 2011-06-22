@@ -7,6 +7,7 @@ __date__ = "$May 29, 2011 5:15:44 PM$"
 from django.core.management.base import *
 from django.db import transaction
 from django.db.models import *
+from optparse import *
 from datetime import *
 from decimal import *
 
@@ -34,6 +35,9 @@ class Command (BaseCommand):
         except: raise OptionValueError ("pair %s invalid" % value)
 
         setattr(parser.values, option.dest, value)
+
+    ###########################################################################
+    ###########################################################################
 
     option_list = BaseCommand.option_list + (
         make_option ('-l', '--general-log-level',

@@ -5,6 +5,7 @@ __date__ = "$Jun 22, 2011 1:26:13 AM$"
 ###############################################################################
 
 from django.core.management.base import *
+from optparse import *
 from datetime import *
 
 import logging
@@ -38,7 +39,7 @@ class Command (BaseCommand):
         if value != None:
 
             try: result = datetime.strptime (value, '%Y-%m-%d %H:%M:%S')
-            except ValueError as e: raise OptionValueError (e)
+            except ValueError as e: raise OptionValueError ('%s' % e)
 
         else: result = None
 
@@ -95,7 +96,7 @@ class Command (BaseCommand):
             type='float',
             action='store',
             dest='sleep',
-            default=0.125,
+            default=0.025,
             help='seconds to sleep per tick [default: %default]'
         ),
 
@@ -134,10 +135,11 @@ class Command (BaseCommand):
             raise CommandError('invalid level: %s' % options['msglog_level'])
         msglog = logging.getLogger ('msg')
         msglog.setLevel (msglog_level)
-
+        
         if options['tar_pair'] != None:
             srvlog.debug ('querying for pair "%s"' % options['tar_pair'])
             tar_quote, tar_base = options['tar_pair'].split ('/')
+            from core.models import PAIR
             try: tar_pair = PAIR.objects.get (quote=tar_quote, base=tar_base)
             except Exception as e: raise CommandError (e)
         else:
@@ -157,6 +159,9 @@ class Command (BaseCommand):
 
         interval = {'beg':beg_datetime, 'end':end_datetime}
 
+        if options['sleep'] != None: sleep = options['sleep']
+        else: raise CommandError ('SLEEP not set')
+
         if options['uri_clients'] != None: uri_clients = options['uri_clients']
         else: raise CommandError ('URI_CLIENTS not set')
 
@@ -165,7 +170,7 @@ class Command (BaseCommand):
 
         try:
             self.server (
-                interval, tar_pair, uri_clients, sz_threads
+                interval, tar_pair, sleep, uri_clients, sz_threads
             )
 
         except KeyboardInterrupt:
@@ -175,7 +180,7 @@ class Command (BaseCommand):
             srvlog.exception (ex)
 
     ###########################################################################
-    def server (self, interval, pair, uri_clients, sz_threads):
+    def server (self, interval, pair, sleep, uri_clients, sz_threads):
     ###########################################################################
 
         srvlog = logging.getLogger ('srv')
@@ -190,7 +195,7 @@ class Command (BaseCommand):
 
         srvlog.info ('server started')
         try:
-            self.publish (socket, interval, pair)
+            self.main (socket, interval, pair, sleep)
 
         except KeyboardInterrupt:
             pass
@@ -209,7 +214,7 @@ class Command (BaseCommand):
             srvlog.info ('server shut down')
 
     ###########################################################################
-    def publish (self, socket, interval, pair, seconds = 0.125):
+    def main (self, socket, interval, pair = None, seconds = 0.025):
     ###########################################################################
 
         from core.models import TICK

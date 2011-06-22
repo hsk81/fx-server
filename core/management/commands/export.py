@@ -6,6 +6,7 @@ __date__ = "$Jun 6, 2011 10:28:06 AM$"
 
 from django.core.management.base import *
 from django.db.models import *
+from optparse import *
 from datetime import *
 from decimal import *
 from random import *
@@ -40,7 +41,7 @@ class Command (BaseCommand):
         if value != None:
 
             try: result = datetime.strptime (value, '%Y-%m-%d %H:%M:%S')
-            except ValueError as e: raise OptionValueError (e)
+            except ValueError as e: raise OptionValueError ('%s' % e)
 
         else: result = None
 

@@ -15,7 +15,7 @@ from core.models import *
 class ADDRESS (models.Model):
 
     """
-    ...
+    An ADDRESS object represents an address.
     """
     
     class Meta:

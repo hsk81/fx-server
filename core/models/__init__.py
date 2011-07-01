@@ -24,18 +24,9 @@ from STOP_LOSS_ORDER import STOP_LOSS_ORDER
 from TAKE_PROFIT_ORDER import TAKE_PROFIT_ORDER
 
 ###############################################################################
-# Helper models of database models
-###############################################################################
-
-from CANDLE_POINT import CANDLE_POINT
-from HISTORY_POINT import HISTORY_POINT
-from MIN_MAX_POINT import MIN_MAX_POINT
-
-###############################################################################
 # Non database models
 ###############################################################################
 
-from EVENT_MANAGER import EVENT_MANAGER
 from RATE_TABLE import RATE_TABLE
 from CLIENT import CLIENT
 

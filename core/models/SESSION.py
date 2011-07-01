@@ -34,6 +34,7 @@ class SESSION (models.Model):
     ###########################################################################
 
     stamp = models.ForeignKey (STAMP)
+    user = models.ForeignKey (USER)
     ip_address = models.IPAddressField ()
 
     ###########################################################################

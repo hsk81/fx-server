@@ -14,7 +14,6 @@ from time import *
 ###############################################################################
 ###############################################################################
 
-## public abstract class FXClient extends java.util.Observable
 class CLIENT (models.Model):
 
     """
@@ -35,30 +34,9 @@ class CLIENT (models.Model):
 
         super (CLIENT, self).__init__ (*args, **kwargs)
 
-        self.user = None
-        self.rate_table = None
-        self.state = None
-        self.timeout = None
-
     ###########################################################################
     ###########################################################################
 
-    ## User getUser()
-    def get_user (self):
-        """
-        Returns the USER object currently connected to the foreign exchange
-        server.
-        """
-        return self.user
-
-    ## RateTable getRateTable()
-    def get_rate_table (self):
-        """
-        Returns the RATE_TALBE object.
-        """
-        return self.rate_table
-
-    ## long getServerTime()
     def get_server_time (self):
         """
         Returns the current time held by the foreign exchange server expressed
@@ -66,50 +44,128 @@ class CLIENT (models.Model):
         """
         return mktime (datetime.now ().timetuple ())
 
-    ## boolean isLoggedIn()
-    def is_logged_in (self):
-        """
-        Returns true if a connection exists with the server, false otherwise.
-        """
-        return self.user != None and self.rate_table != None
-    
-    ## void login(java.lang.String username, java.lang.String password)
-    def login (self, username, password):
+    get_server_time = staticmethod (get_server_time)
+
+    def login (self, username, password, ip_address):
         """
         Attempts to establish a connection to foreign exchange servers.
         """
-        self.user = USER.objects.get (username=username, password=password)
-        self.rate_table = RATE_TABLE ()
+        users_by_username = USER.objects.filter (username=username)
+        users_by_password = USER.objects.filter (password=password)
 
-    ## void logout()
-    def logout (self):
+        if bool (users_by_username):
+            if bool (users_by_password):
+
+                user = USER.objects.get (
+                    username=username, password=password
+                )
+
+                sessions = SESSION.objects.filter (
+                    user = user,
+                    ip_address__neq = ip_address,
+                    stamp__insert_date__lt = datetime.now (),
+                    stamp__delete_date__isnull = True
+                )
+
+                if not bool (sessions):
+                    SESSION.objects.create (
+                        user = user,
+                        ip_address = ip_address,
+                        stamp = STAMP()
+                    )
+
+                    return 'CONNECTED'
+                else:
+                    return 'SESSION_ERROR'
+            else:
+                return 'INVALID_PASSWORD_ERROR'
+        else:
+            return 'INVALID_USER_ERROR'
+
+    login = staticmethod (login)
+
+    def logout (self, username, password, ip_address):
         """
         Disconnects from the server.
         """
-        self.user = None
-        self.rate_table = None
-    
-    ## void setProxy(boolean state)
-    def set_proxy (self, state):
-        """
-        Sets the proxy status for future connections to the server.
-        """
-        self.state = state
+        users_by_username = USER.objects.filter (username=username)
+        users_by_password = USER.objects.filter (password=password)
 
-    ## void setTimeout(int timeout)
-    def set_timeout (self, timeout):
-        """
-        Sets the timeout for server response in seconds.
-        """
-        self.timeout = timeout
+        if bool (users_by_username):
+            if bool (users_by_password):
+
+                user = USER.objects.get (
+                    username=username, password=password
+                )
+
+                sessions = SESSION.objects.filter (
+                    user = user,
+                    ip_address = ip_address,
+                    stamp__insert_date__lt = datetime.now (),
+                    stamp__delete_date__isnull = True
+                )
+
+                if bool (sessions):
+                    for session in sessions:
+                        session.delete_date = datetime.now ()
+                        session.save ()
+
+                    return 'DISCONNECTED'
+                else:
+                    return 'SESSION_ERROR'
+            else:
+                return 'INVALID_PASSWORD_ERROR'
+        else:
+            return 'INVALID_USER_ERROR'
     
+    logout = staticmethod (logout)
+
     ###########################################################################
     ###########################################################################
 
-    ## java.lang.String toString()
     def __unicode__ (self):
 
-        return "%s" % ((self.user != None) and self.user or None)
+        return "%s" % ((user != None) and user or None)
+
+###############################################################################
+###############################################################################
+
+class WRAP:
+
+    def invoke (cls, method, *args):
+
+        return getattr (WRAP, method)(cls, method, *args)
+
+    invoke = staticmethod (invoke)
+
+    def login (cls, method, username, password, ip_address):
+
+        return '%s|%s|%s|%s|%s' % (cls, method, username, password,
+            CLIENT.login (username, password, ip_address)
+        )
+
+    login = staticmethod (login)
+
+    def logout (cls, method, username, password, ip_address):
+
+        return '%s|%s|%s|%s|%s' % (cls, method, username, password,
+            CLIENT.logout (username, password, ip_address)
+        )
+
+    logout = staticmethod (logout)
+
+    def get_server_time (cls, method):
+
+        return '%s|%s|%d' % (cls, method,
+            CLIENT.get_server_time ()
+        )
+
+    get_server_time = staticmethod (get_server_time)
+
+###############################################################################
+###############################################################################
+
+CLIENT.invoke = staticmethod (WRAP.invoke)
 
 ###############################################################################
 ###############################################################################

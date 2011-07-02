@@ -6,20 +6,25 @@ from core.models import *
 
 admin.site.register (STAMP)
 admin.site.register (ADDRESS)
-admin.site.register (USER)
 admin.site.register (ACCOUNT)
 admin.site.register (SESSION)
-admin.site.register (EVENT_MANAGER)
 admin.site.register (LIMIT_ORDER)
 admin.site.register (MARKET_ORDER)
 admin.site.register (STOP_LOSS_ORDER)
 admin.site.register (TAKE_PROFIT_ORDER)
-admin.site.register (CANDLE_POINT)
 admin.site.register (RATE_TABLE)
 admin.site.register (CLIENT)
 
 ###############################################################################
 ###############################################################################
+
+class USERAdmin (admin.ModelAdmin):
+
+    list_display = (
+        'id', 'first_name', 'last_name', 'username', 'last_login', 'is_active'
+    )
+
+admin.site.register (USER, USERAdmin)
 
 class PAIRAdmin (admin.ModelAdmin):
 

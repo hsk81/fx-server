@@ -28,28 +28,21 @@ class CLIENT (models.Model):
         verbose_name_plural = 'client'
 
     ###########################################################################
-    ###########################################################################
-
     def __init__ (self, *args, **kwargs):
+    ###########################################################################
 
         super (CLIENT, self).__init__ (*args, **kwargs)
 
     ###########################################################################
+    def get_server_time (self):
     ###########################################################################
 
-    def get_server_time (self):
-        """
-        Returns the current time held by the foreign exchange server expressed
-        as a unix timestamp.
-        """
         return mktime (datetime.now ().timetuple ())
 
-    get_server_time = staticmethod (get_server_time)
-
+    ###########################################################################
     def login (self, username, password, ip_address):
-        """
-        Attempts to establish a connection to foreign exchange servers.
-        """
+    ###########################################################################
+
         users_by_username = USER.objects.filter (username=username)
         users_by_password = USER.objects.filter (password=password)
 
@@ -62,7 +55,8 @@ class CLIENT (models.Model):
 
                 sessions = SESSION.objects.filter (
                     user = user,
-                    ip_address__neq = ip_address,
+                    ip_address__lt = ip_address,
+                    ip_address__gt = ip_address,
                     stamp__insert_date__lt = datetime.now (),
                     stamp__delete_date__isnull = True
                 )
@@ -71,7 +65,7 @@ class CLIENT (models.Model):
                     SESSION.objects.create (
                         user = user,
                         ip_address = ip_address,
-                        stamp = STAMP()
+                        stamp = STAMP.objects.create ()
                     )
 
                     return 'CONNECTED'
@@ -82,12 +76,10 @@ class CLIENT (models.Model):
         else:
             return 'INVALID_USER_ERROR'
 
-    login = staticmethod (login)
-
+    ###########################################################################
     def logout (self, username, password, ip_address):
-        """
-        Disconnects from the server.
-        """
+    ###########################################################################
+
         users_by_username = USER.objects.filter (username=username)
         users_by_password = USER.objects.filter (password=password)
 
@@ -118,15 +110,6 @@ class CLIENT (models.Model):
         else:
             return 'INVALID_USER_ERROR'
     
-    logout = staticmethod (logout)
-
-    ###########################################################################
-    ###########################################################################
-
-    def __unicode__ (self):
-
-        return "%s" % ((user != None) and user or None)
-
 ###############################################################################
 ###############################################################################
 
@@ -140,25 +123,23 @@ class WRAP:
 
     def login (cls, method, username, password, ip_address):
 
-        return '%s|%s|%s|%s|%s' % (cls, method, username, password,
-            CLIENT.login (username, password, ip_address)
+        return '%s|%s|%s|%s|%s|%s' % (cls, method, username, password, ip_address,
+            CLIENT ().login (username, password, ip_address)
         )
 
     login = staticmethod (login)
 
     def logout (cls, method, username, password, ip_address):
 
-        return '%s|%s|%s|%s|%s' % (cls, method, username, password,
-            CLIENT.logout (username, password, ip_address)
+        return '%s|%s|%s|%s|%s|%s' % (cls, method, username, password, ip_address,
+            CLIENT ().logout (username, password, ip_address)
         )
 
     logout = staticmethod (logout)
 
     def get_server_time (cls, method):
 
-        return '%s|%s|%d' % (cls, method,
-            CLIENT.get_server_time ()
-        )
+        return '%s|%s|%d' % (cls, method, CLIENT ().get_server_time ())
 
     get_server_time = staticmethod (get_server_time)
 

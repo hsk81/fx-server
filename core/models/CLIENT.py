@@ -40,20 +40,20 @@ class CLIENT (models.Model):
         return mktime (datetime.now ().timetuple ())
 
     ###########################################################################
-    def login (self, username, password, ip_address):
+    def login (self, username, password, ip_address): ##TODO: DB transactions?
     ###########################################################################
 
-        users_by_username = USER.objects.filter (username=username)
-        users_by_password = USER.objects.filter (password=password)
+        users_by_username = USER.objects.filter (username = username)
+        users_by_password = USER.objects.filter (password = password)
 
         if bool (users_by_username):
             if bool (users_by_password):
 
                 user = USER.objects.get (
-                    username=username, password=password
+                    username = username, password = password
                 )
 
-                sessions = SESSION.objects.filter (
+                sessions_with_other_ip_addresses = SESSION.objects.filter (
                     user = user,
                     ip_address__lt = ip_address,
                     ip_address__gt = ip_address,
@@ -61,12 +61,32 @@ class CLIENT (models.Model):
                     stamp__delete_date__isnull = True
                 )
 
-                if not bool (sessions):
-                    SESSION.objects.create (
+                if not bool (sessions_with_other_ip_addresses):
+
+                    sessions_with_same_ip_addresses = SESSION.objects.filter (
                         user = user,
                         ip_address = ip_address,
-                        stamp = STAMP.objects.create ()
+                        stamp__insert_date__lt = datetime.now (),
+                        stamp__delete_date__isnull = True
                     )
+
+                    if not bool (sessions_with_same_ip_addresses):
+                    
+                        SESSION.objects.create (
+                            user = user,
+                            ip_address = ip_address,
+                            stamp = STAMP.objects.create ()
+                        )
+
+                    else:
+
+                        for session in sessions_with_same_ip_addresses:
+
+                            old_stamp = session.stamp
+                            new_stamp = STAMP.objects.create ()
+                            session.stamp = new_stamp
+                            session.save ()
+                            old_stamp.delete ()
 
                     return 'CONNECTED'
                 else:
@@ -77,7 +97,7 @@ class CLIENT (models.Model):
             return 'INVALID_USER_ERROR'
 
     ###########################################################################
-    def logout (self, username, password, ip_address):
+    def logout (self, username, password, ip_address): ##TODO: DB transactions?
     ###########################################################################
 
         users_by_username = USER.objects.filter (username=username)
@@ -136,6 +156,14 @@ class WRAP:
         )
 
     logout = staticmethod (logout)
+
+    def refresh (cls, method, username, password, ip_address):
+
+        return '%s|%s|%s|%s|%s|%s' % (cls, method, username, password, ip_address,
+            CLIENT ().login (username, password, ip_address)
+        )
+
+    refresh = staticmethod (refresh)
 
     def get_server_time (cls, method):
 

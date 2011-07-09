@@ -104,7 +104,18 @@ class USER (auth.models.User):
 
     def __unicode__ (self):
 
-        return "%s, %s" % (self.last_name, self.first_name)
+        if self.last_name != None and self.last_name != "" and \
+           self.first_name != None and self.first_name != "" :
+            return "%s, %s" % (self.last_name, self.first_name)
+
+        elif self.last_name != None and self.last_name != "":
+            return "%s" % (self.last_name)
+
+        elif self.first_name != None and self.first_name != "":
+            return "%s" % (self.first_name)
+
+        else:
+            return "%s" % (self.username)
 
 ###############################################################################
 ###############################################################################

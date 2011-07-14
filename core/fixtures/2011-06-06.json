@@ -1,1 +1,74 @@
-[{"pk": 1, "model": "core.stamp", "fields": {"update_date": "2011-07-09 23:07:53", "delete_date": null, "insert_date": "2011-07-09 23:07:53"}}, {"pk": 1, "model": "core.address", "fields": {"city": "Zurich", "zip": "CH-8000", "line2": "", "line1": "Zurichstrasse 1", "country": "Switzerland"}}, {"pk": 2, "model": "core.user", "fields": {"profile": "", "phone": "+4179888888", "user_permissions": [], "groups": [1], "address": 1}}, {"pk": 1, "model": "core.account", "fields": {"profile": "", "name": "primary", "stamp": 1, "home_currency": "CHF", "user": 2, "balance": "1000"}}, {"pk": 1, "model": "core.pair", "fields": {"active": true, "quote": "EUR", "base": "USD"}}, {"pk": 2, "model": "core.pair", "fields": {"active": true, "quote": "EUR", "base": "CHF"}}, {"pk": 3, "model": "core.pair", "fields": {"active": true, "quote": "USD", "base": "CHF"}}]
+[
+    {
+        "pk": 1, 
+        "model": "core.stamp", 
+        "fields": {
+            "update_date": "2011-07-07 12:15:00", 
+            "delete_date": null, 
+            "insert_date": "2011-07-07 12:15:00"
+        }
+    }, 
+    {
+        "pk": 1, 
+        "model": "core.address", 
+        "fields": {
+            "city": "Zurich", 
+            "zip": "CH-8000", 
+            "line2": "", 
+            "line1": "Zurichstrasse 1", 
+            "country": "Switzerland"
+        }
+    }, 
+    {
+        "pk": 2, 
+        "model": "core.user", 
+        "fields": {
+            "profile": "", 
+            "phone": "+4179888888", 
+            "user_permissions": [], 
+            "groups": [
+                1
+            ], 
+            "address": 1
+        }
+    }, 
+    {
+        "pk": 1, 
+        "model": "core.account", 
+        "fields": {
+            "profile": "", 
+            "name": "primary", 
+            "stamp": 1, 
+            "home_currency": "CHF", 
+            "user": 2, 
+            "balance": "1000"
+        }
+    }, 
+    {
+        "pk": 1, 
+        "model": "core.pair", 
+        "fields": {
+            "active": true, 
+            "quote": "EUR", 
+            "base": "USD"
+        }
+    }, 
+    {
+        "pk": 2, 
+        "model": "core.pair", 
+        "fields": {
+            "active": true, 
+            "quote": "EUR", 
+            "base": "CHF"
+        }
+    }, 
+    {
+        "pk": 3, 
+        "model": "core.pair", 
+        "fields": {
+            "active": true, 
+            "quote": "USD", 
+            "base": "CHF"
+        }
+    }
+]

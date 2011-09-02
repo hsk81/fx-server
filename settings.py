@@ -1,4 +1,4 @@
-DEBUG = False
+DEBUG = True
 TEMPLATE_DEBUG = DEBUG
 
 ADMINS = (
@@ -9,7 +9,7 @@ MANAGERS = ADMINS
 
 import os
 SITE_ROOT = os.path.realpath (os.path.dirname (__file__))
-SITE_NAME = 'fxs'
+SITE_NAME = 'fx-server'
 SITE_HOST = 'blackhan.ch'
 SITE_ID   = 1
 

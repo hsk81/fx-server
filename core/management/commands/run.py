@@ -179,13 +179,13 @@ class Command (BaseCommand):
         while True:
 
             try:
-                request = socket.recv ()
+                request = socket.recv_unicode ()
                 msglog.debug ('T%02d - REQ "%s"' % (id, request))
 
                 response = self.process (*request.split ('|'))
                 msglog.debug ('T%02d - REP "%s"' % (id, response))
 
-                socket.send (response)
+                socket.send_unicode (response)
 
             except zmq.ZMQError, ex:
                 srvlog.debug ('T%02d - %s' % (id, ex))

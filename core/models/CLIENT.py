@@ -3,16 +3,16 @@
 __author__ = "hsk81"
 __date__ = "$May 14, 2011 5:43:02 PM$"
 
-###############################################################################
-###############################################################################
+###############################################################################################
+###############################################################################################
 
-from django.db import models
-from core.models import *
-from datetime import *
 from time import *
+from datetime import *
+from core.models import *
+from django.db import models
 
-###############################################################################
-###############################################################################
+###############################################################################################
+###############################################################################################
 
 class CLIENT (models.Model):
 
@@ -27,111 +27,102 @@ class CLIENT (models.Model):
         app_label = 'core'
         verbose_name_plural = 'client'
 
-    ###########################################################################
+    ###########################################################################################
     def __init__ (self, *args, **kwargs):
-    ###########################################################################
+    ###########################################################################################
 
         super (CLIENT, self).__init__ (*args, **kwargs)
 
-    ###########################################################################
+    ###########################################################################################
     def get_server_time (self):
-    ###########################################################################
+    ###########################################################################################
 
         return mktime (datetime.now ().timetuple ())
 
-    ###########################################################################
+    ###########################################################################################
     def login (self, username, password, ip_address): ##TODO: DB transactions?
-    ###########################################################################
+    ###########################################################################################
 
         users_by_username = USER.objects.filter (username = username)
-        users_by_password = USER.objects.filter (password = password)
+        if not bool (users_by_username): return 'INVALID_USER_ERROR'
 
-        if bool (users_by_username):
-            if bool (users_by_password):
+        users_by_password = USER.objects.filter (username = username, password = password)
+        if not bool (users_by_password): return 'INVALID_PASSWORD_ERROR'
 
-                user = USER.objects.get (
-                    username = username, password = password
-                )
+        user = USER.objects.get (
+            username = username, password = password
+        )
 
-                sessions_with_other_ip_addresses = SESSION.objects.filter (
-                    user = user,
-                    ip_address__lt = ip_address,
-                    ip_address__gt = ip_address,
-                    stamp__insert_date__lt = datetime.now (),
-                    stamp__delete_date__isnull = True
-                )
+        sessions_with_other_ip_addresses = SESSION.objects.filter (
+            user = user,
+            ip_address__lt = ip_address,
+            ip_address__gt = ip_address,
+            stamp__insert_date__lt = datetime.now (),
+            stamp__delete_date__isnull = True
+        )
 
-                if not bool (sessions_with_other_ip_addresses):
+        if bool (sessions_with_other_ip_addresses):
+            return 'SESSION_ERROR'
 
-                    sessions_with_same_ip_addresses = SESSION.objects.filter (
-                        user = user,
-                        ip_address = ip_address,
-                        stamp__insert_date__lt = datetime.now (),
-                        stamp__delete_date__isnull = True
-                    )
+        sessions_with_same_ip_addresses = SESSION.objects.filter (
+            user = user,
+            ip_address = ip_address,
+            stamp__insert_date__lt = datetime.now (),
+            stamp__delete_date__isnull = True
+        )
 
-                    if not bool (sessions_with_same_ip_addresses):
-                    
-                        SESSION.objects.create (
-                            user = user,
-                            ip_address = ip_address,
-                            stamp = STAMP.objects.create ()
-                        )
+        if not bool (sessions_with_same_ip_addresses):
 
-                    else:
+            session = SESSION.objects.create (
+                user = user,
+                ip_address = ip_address,
+                stamp = STAMP.objects.create ()
+            )
 
-                        for session in sessions_with_same_ip_addresses:
-
-                            old_stamp = session.stamp
-                            new_stamp = STAMP.objects.create ()
-                            session.stamp = new_stamp
-                            session.save ()
-                            old_stamp.delete ()
-
-                    return 'CONNECTED'
-                else:
-                    return 'SESSION_ERROR'
-            else:
-                return 'INVALID_PASSWORD_ERROR'
         else:
-            return 'INVALID_USER_ERROR'
 
-    ###########################################################################
-    def logout (self, username, password, ip_address): ##TODO: DB transactions?
-    ###########################################################################
+            for session in sessions_with_same_ip_addresses:
 
-        users_by_username = USER.objects.filter (username=username)
-        users_by_password = USER.objects.filter (password=password)
+                old_stamp = session.stamp
+                new_stamp = STAMP.objects.create ()
+                session.stamp = new_stamp
+                session.save ()
+                old_stamp.delete ()
 
-        if bool (users_by_username):
-            if bool (users_by_password):
+        return 'CONNECTED|%s' % session.token
 
-                user = USER.objects.get (
-                    username=username, password=password
-                )
+    ###########################################################################################
+    def refresh (self, session_token):
+    ###########################################################################################
 
-                sessions = SESSION.objects.filter (
-                    user = user,
-                    ip_address = ip_address,
-                    stamp__insert_date__lt = datetime.now (),
-                    stamp__delete_date__isnull = True
-                )
+        sessions = SESSION.objects.filter (token = session_token)
+        if not bool (sessions): return 'SESSION_ERROR'
 
-                if bool (sessions):
-                    for session in sessions:
-                        session.delete_date = datetime.now ()
-                        session.save ()
+        for session in sessions:
 
-                    return 'DISCONNECTED'
-                else:
-                    return 'SESSION_ERROR'
-            else:
-                return 'INVALID_PASSWORD_ERROR'
-        else:
-            return 'INVALID_USER_ERROR'
+            result = self.login (
+                session.user.username,
+                session.user.password,
+                session.ip_address
+            )
+
+        return result
+
+    ###########################################################################################
+    def logout (self, session_token):
+    ###########################################################################################
+
+        sessions = SESSION.objects.filter (token = session_token)
+        if not bool (sessions): return 'SESSION_ERROR'
+
+        for session in sessions:
+            session.delete_date = datetime.now ()
+            session.save ()
+
+        return 'DISCONNECTED'
     
-###############################################################################
-###############################################################################
+###############################################################################################
+###############################################################################################
 
 class WRAP:
 
@@ -149,18 +140,18 @@ class WRAP:
 
     login = staticmethod (login)
 
-    def logout (cls, method, username, password, ip_address):
+    def logout (cls, method, session_token):
 
-        return '%s|%s|%s|%s|%s|%s' % (cls, method, username, password, ip_address,
-            CLIENT ().logout (username, password, ip_address)
+        return '%s|%s|%s|%s' % (cls, method, session_token,
+            CLIENT ().logout (session_token)
         )
 
     logout = staticmethod (logout)
 
-    def refresh (cls, method, username, password, ip_address):
+    def refresh (cls, method, session_token):
 
-        return '%s|%s|%s|%s|%s|%s' % (cls, method, username, password, ip_address,
-            CLIENT ().login (username, password, ip_address)
+        return '%s|%s|%s|%s' % (cls, method, session_token,
+            CLIENT ().refresh (session_token)
         )
 
     refresh = staticmethod (refresh)
@@ -171,13 +162,13 @@ class WRAP:
 
     get_server_time = staticmethod (get_server_time)
 
-###############################################################################
-###############################################################################
+###############################################################################################
+###############################################################################################
 
 CLIENT.invoke = staticmethod (WRAP.invoke)
 
-###############################################################################
-###############################################################################
+###############################################################################################
+###############################################################################################
 
 if __name__ == "__main__":
 

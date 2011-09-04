@@ -8,10 +8,11 @@ __date__ = "$Apr 22, 2011 2:50:14 PM$"
 ###############################################################################
 
 from STAMP import STAMP
+from TOKEN import TOKEN
+from SESSION import SESSION
 from ADDRESS import ADDRESS
 from USER import USER
 from ACCOUNT import ACCOUNT
-from SESSION import SESSION
 
 from PAIR import PAIR
 from TICK import TICK

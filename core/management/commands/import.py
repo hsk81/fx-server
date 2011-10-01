@@ -39,7 +39,14 @@ class Command (BaseCommand):
     ###########################################################################
     ###########################################################################
 
-    option_list = BaseCommand.option_list + (
+    option_list = BaseCommand.option_list[1:] + (
+        make_option ('-v', '--verbose',
+            action='store_true',
+            dest='verbose',
+            default=False,
+            help='sets all loggers to the debug level'
+        ),
+
         make_option ('-l', '--general-log-level',
             type='string',
             action='store',
@@ -73,9 +80,8 @@ class Command (BaseCommand):
     )
 
     ###########################################################################
-    ###########################################################################
-
     def handle(self, *args, **options):
+    ###########################################################################
 
         from core.models import PAIR, TICK
 
@@ -85,8 +91,9 @@ class Command (BaseCommand):
             
             raise CommandError ('invalid level: %s' % options['srvlog_level'])
 
-        srvlog = logging.getLogger ('srv')
-        srvlog.setLevel (srvlog_level)
+        srvlog = logging.getLogger ('srv'); srvlog.setLevel (
+            options['verbose'] and logging.DEBUG or srvlog_level
+        )
 
         if options['file'] == None: raise CommandError ('FILE not set')
         else: filename = options['file']
@@ -116,11 +123,10 @@ class Command (BaseCommand):
             
         srvlog.debug ('file "%s" closed' % filename)
 
-    ###########################################################################
-    ###########################################################################
-
     @transaction.commit_manually
+    ###########################################################################
     def import2db (self, file, pair, buffer_size):
+    ###########################################################################
         
         from core.models import PAIR, TICK
 

@@ -50,7 +50,14 @@ class Command (BaseCommand):
     ###########################################################################
     ###########################################################################
     
-    option_list = BaseCommand.option_list + (
+    option_list = BaseCommand.option_list[1:] + (
+        make_option ('-v', '--verbose',
+            action='store_true',
+            dest='verbose',
+            default=False,
+            help='sets all loggers to the debug level'
+        ),
+
         make_option ('-l', '--general-log-level',
             type='string',
             action='store',
@@ -186,11 +193,11 @@ class Command (BaseCommand):
         logging.basicConfig (format='[%(asctime)s] %(levelname)s: %(message)s')
         srvlog_level = getattr (logging, options['srvlog_level'].upper(), None)
         if not isinstance (srvlog_level, int):
-
             raise CommandError ('invalid level: %s' % options['srvlog_level'])
 
-        srvlog = logging.getLogger ('srv')
-        srvlog.setLevel (srvlog_level)
+        srvlog = logging.getLogger ('srv'); srvlog.setLevel (
+            options['verbose'] and logging.DEBUG or srvlog_level
+        )
 
         if options['tar_pair'] != None:
             self.handle_export (*args, **options)

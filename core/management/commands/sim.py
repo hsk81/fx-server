@@ -45,10 +45,25 @@ class Command (BaseCommand):
 
         setattr(parser.values, option.dest, result)
 
+    def check_scale (option, opt_str, value, parser):
+
+        if value < 0:
+
+            raise OptionValueError ('%s' % value)
+
+        setattr(parser.values, option.dest, value)
+
     ###########################################################################
     ###########################################################################
 
-    option_list = BaseCommand.option_list + (
+    option_list = BaseCommand.option_list[1:] + (
+        make_option ('-v', '--verbose',
+            action='store_true',
+            dest='verbose',
+            default=False,
+            help='sets all loggers to the debug level'
+        ),
+
         make_option ('-l', '--general-log-level',
             type='string',
             action='store',
@@ -56,7 +71,7 @@ class Command (BaseCommand):
             default='info',
             help='server\'s general log level [default: %default]'
         ),
-        
+
         make_option ('-m', '--message-log-level',
             type='string',
             action='store',
@@ -92,12 +107,13 @@ class Command (BaseCommand):
             help='end datetime for interval [default: %default]'
         ),
 
-        make_option ('-s', '--sleep',
+        make_option ('-s', '--scale',
             type='float',
-            action='store',
-            dest='sleep',
-            default=0.025,
-            help='seconds to sleep per tick [default: %default]'
+            action='callback',
+            dest='scale',
+            callback=check_scale,
+            default=1.0,
+            help='scale of simulation [default: %default]'
         ),
 
         make_option ('-c', '--uri-client',
@@ -127,15 +143,19 @@ class Command (BaseCommand):
         srvlog_level = getattr(logging, options['srvlog_level'].upper(), None)
         if not isinstance(srvlog_level, int):
             raise CommandError('invalid level: %s' % options['srvlog_level'])
-        srvlog = logging.getLogger ('srv')
-        srvlog.setLevel (srvlog_level)
 
+        srvlog = logging.getLogger ('srv'); srvlog.setLevel (
+            options['verbose'] and logging.DEBUG or srvlog_level
+        )
+        
         msglog_level = getattr(logging, options['msglog_level'].upper(), None)
         if not isinstance(msglog_level, int):
             raise CommandError('invalid level: %s' % options['msglog_level'])
-        msglog = logging.getLogger ('msg')
-        msglog.setLevel (msglog_level)
         
+        msglog = logging.getLogger ('msg'); msglog.setLevel (
+            options['verbose'] and logging.DEBUG or msglog_level
+        )
+
         if options['tar_pair'] != None:
             srvlog.debug ('querying for pair "%s"' % options['tar_pair'])
             tar_quote, tar_base = options['tar_pair'].split ('/')
@@ -158,9 +178,7 @@ class Command (BaseCommand):
             end_datetime = datetime.max
 
         interval = {'beg':beg_datetime, 'end':end_datetime}
-
-        if options['sleep'] != None: sleep = options['sleep']
-        else: raise CommandError ('SLEEP not set')
+        scale = options['scale']
 
         if options['uri_clients'] != None: uri_clients = options['uri_clients']
         else: raise CommandError ('URI_CLIENTS not set')
@@ -170,7 +188,7 @@ class Command (BaseCommand):
 
         try:
             self.server (
-                interval, tar_pair, sleep, uri_clients, sz_threads
+                interval, tar_pair, scale, uri_clients, sz_threads
             )
 
         except KeyboardInterrupt:
@@ -214,7 +232,7 @@ class Command (BaseCommand):
             srvlog.info ('server shut down')
 
     ###########################################################################
-    def main (self, socket, interval, pair = None, seconds = 0.025):
+    def main (self, socket, interval, pair = None, scale = 1.0):
     ###########################################################################
 
         from core.models import TICK
@@ -237,16 +255,24 @@ class Command (BaseCommand):
                 datetime__gte=beg_datetime, datetime__lt=end_datetime
             )
 
-        for tick in ticks: ##TODO: Improve performance!
+        if scale == 0:
+            for tick in ticks:
 
-            message = '%s|%d|%0.6f|%0.6f' % (
-                tick.pair, tick.unixstamp, tick.bid, tick.ask
-            )
+                mesg = '%s|%d|%0.6f|%0.6f' % (tick.pair, tick.unixstamp, tick.bid, tick.ask)
+                socket.send (mesg); msglog.debug (mesg); time.sleep (0)
 
-            socket.send (message)
-            msglog.debug (message)
+        else:
+            last = ticks[0]
+            tack = time.clock ()
+            for tick in ticks:
 
-            time.sleep (seconds)
+                time.sleep (max (0,
+                    ((tick.unixstamp - last.unixstamp) - (time.clock () - tack)) * scale
+                ))
 
-###############################################################################
-###############################################################################
+                tack = time.clock (); last = tick
+                mesg = '%s|%d|%0.6f|%0.6f' % (tick.pair, tick.unixstamp, tick.bid, tick.ask)
+                socket.send (mesg); msglog.debug (mesg)
+
+###############################################################################################
+###############################################################################################

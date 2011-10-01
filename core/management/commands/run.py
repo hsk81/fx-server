@@ -24,7 +24,14 @@ class Command (BaseCommand):
     ###########################################################################
     ###########################################################################
 
-    option_list = BaseCommand.option_list + (
+    option_list = BaseCommand.option_list[1:] + (
+        make_option ('-v', '--verbose',
+            action='store_true',
+            dest='verbose',
+            default=False,
+            help='sets all loggers to the debug level'
+        ),
+
         make_option ('-l', '--general-log-level',
             type='string',
             action='store',
@@ -85,15 +92,17 @@ class Command (BaseCommand):
         if not isinstance(srvlog_level, int):
             raise CommandError('invalid level: %s' % options['srvlog_level'])
 
-        srvlog = logging.getLogger ('srv')
-        srvlog.setLevel (srvlog_level)
+        srvlog = logging.getLogger ('srv'); srvlog.setLevel (
+            options['verbose'] and logging.DEBUG or srvlog_level
+        )
         
         msglog_level = getattr(logging, options['msglog_level'].upper(), None)
         if not isinstance(msglog_level, int):
             raise CommandError('invalid level: %s' % options['msglog_level'])
 
-        msglog = logging.getLogger ('msg')
-        msglog.setLevel (msglog_level)
+        msglog = logging.getLogger ('msg'); msglog.setLevel (
+            options['verbose'] and logging.DEBUG or msglog_level
+        )
 
         try:
             self.server (

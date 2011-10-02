@@ -133,7 +133,7 @@ class WRAP:
         session = SESSION.objects.get (token = session_token)
 
         return '%s|%s|%s|%s' % (cls, method, session_token,
-            map (lambda a: a.id, session.user.get_accounts ()) ## TODO!?
+            '|'.join (map (lambda account: '%s' % account.id, session.user.get_accounts ()))
         )
 
     get_accounts = staticmethod (get_accounts)

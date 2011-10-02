@@ -3,23 +3,22 @@
 __author__ = "hsk81"
 __date__ = "$Apr 22, 2011 2:50:14 PM$"
 
-###############################################################################
-###############################################################################
+###############################################################################################
+###############################################################################################
 
 from django.db import models
 from core.models import *
 
-###############################################################################
-###############################################################################
+###############################################################################################
+###############################################################################################
 
 ## public final class Account extends Object
 class ACCOUNT (models.Model):
 
     """
-    An ACCOUNT object represents an existing trading account. ACCOUNTs cannot
-    be created through this API. ACCOUNTs are identified by a unique integer id
-    (account_id). Current open trades, ORDERs and TRANSACTIONs are maintained
-    and kept up-to-date within the object.
+    An ACCOUNT object represents an existing trading account. ACCOUNTs cannot be created
+    through this API. ACCOUNTs are identified by a unique integer id (account_id). Current open
+    trades, ORDERs and TRANSACTIONs are maintained and kept up-to-date within the object.
     """
 
     class Meta:

@@ -6,7 +6,8 @@ __date__ = "$Apr 22, 2011 2:50:14 PM$"
 ###############################################################################################
 ###############################################################################################
 
-from time import *
+import time
+
 from core.models import *
 from django.db import models
 from django.contrib import auth
@@ -16,10 +17,6 @@ from django.contrib import auth
 
 class USER (auth.models.User):
 
-    """
-    Provides access to USER information.
-    """
-    
     class Meta:
 
         app_label = 'core'
@@ -29,83 +26,48 @@ class USER (auth.models.User):
     phone = models.CharField (max_length = 256)
     profile = models.CharField (max_length = 256, blank = True, default = '')
 
-    def get_accounts (self):
-        """
-        Returns a vector of ACCOUNTs owned by this USER.
-        """
-        return self.accounts.all ()
+    ###########################################################################################
+    ###########################################################################################
+    
+    @property
+    def info (self):
 
-    def get_account_with_id (self, account_id):
-        """
-        Returns the ACCOUNT owned by this USER with the given account_id.
-        """
-        return self.accounts.get (id = account_id)
+        return [
+            self.id,
+            self.username,
+            self.address.short_address (delimiter = ', '),
+            self.insert_date,
+            self.email,
+            self.fullname,
+            self.password,
+            self.phone,
+            self.profile
+        ]
 
-    def get_address (self):
-        """
-        Returns the USERs ADDRESS.
-        """
-        return "%s" % self.adress
+    @property
+    def insert_date (self):
+        return '%d' % time.mktime (self.date_joined.timetuple ())
 
-    def get_create_date (self):
-        """
-        Returns the date this USER was created as a unix timestamp.
-        """
-        return time.mktime (self.date_joined.timetuple ())
+    @property
+    def fullname (self):
 
-    def get_email (self):
-        """
-        Returns this USERs email address.
-        """
-        return "%s" % self.email
+        if self.last_name != None and self.last_name != "" and \
+           self.first_name != None and self.first_name != "":
+            return "%s, %s" % (self.last_name, self.first_name)
 
-    def get_name (self):
-        """
-        Returns this USERs full name.
-        """
-        return "%s, %s" % (self.last_name, self.first_name)
+        elif self.last_name != None and self.last_name != "":
+            return "%s" % (self.last_name)
 
-    def get_password (self):
-        """
-        Returns the login password for this USER.
-        """
-        return "%s" % self.password
+        elif self.first_name != None and self.first_name != "":
+            return "%s" % (self.first_name)
 
-    def get_profile (self):
-        """
-        Returns the profile string for this USER.
-        """
-        return "%s" % self.profile
-
-    def get_telephone (self):
-        """
-        Returns this USERs telephone number.
-        """
-        return "%s" % self.phone
-
-    def get_user_id (self):
-        """
-        Returns this USERs unique id number.
-        """
-        return self.id
-
-    def get_username (self):
-        """
-        Returns the login username for this USER.
-        """
-        return "%s" % self.username
-
-    def set_profile (self, new_profile):
-        """
-        Sends a profile string to be saved on the server and associated with
-        this USER.
-        """
-        self.profile = new_profile
-
+        else:
+            return None
+        
     def __unicode__ (self):
 
         if self.last_name != None and self.last_name != "" and \
-           self.first_name != None and self.first_name != "" :
+           self.first_name != None and self.first_name != "":
             return "%s, %s" % (self.last_name, self.first_name)
 
         elif self.last_name != None and self.last_name != "":
@@ -128,12 +90,26 @@ class WRAP:
 
     invoke = staticmethod (invoke)
 
+    def get_info (cls, method, session_token):
+
+        session = SESSION.objects.get (
+            token = session_token, stamp__delete_date__isnull = True
+        )
+
+        return '%s|%s|%s|%s' % (cls, method, session_token, '|'.join (
+            map (lambda value: value and str (value) or str (None), session.user.info)
+        ))
+
+    get_info = staticmethod (get_info)
+
     def get_accounts (cls, method, session_token):
 
-        session = SESSION.objects.get (token = session_token)
+        session = SESSION.objects.get (
+            token = session_token, stamp__delete_date__isnull = True
+        )
 
         return '%s|%s|%s|%s' % (cls, method, session_token,
-            '|'.join (map (lambda account: '%s' % account.id, session.user.get_accounts ()))
+            '|'.join (map (lambda account: str (account.id), session.user.accounts.all ()))
         )
 
     get_accounts = staticmethod (get_accounts)

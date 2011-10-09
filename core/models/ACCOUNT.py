@@ -6,20 +6,15 @@ __date__ = "$Apr 22, 2011 2:50:14 PM$"
 ###############################################################################################
 ###############################################################################################
 
-from django.db import models
+import time
+
 from core.models import *
+from django.db import models
 
 ###############################################################################################
 ###############################################################################################
 
-## public final class Account extends Object
 class ACCOUNT (models.Model):
-
-    """
-    An ACCOUNT object represents an existing trading account. ACCOUNTs cannot be created
-    through this API. ACCOUNTs are identified by a unique integer id (account_id). Current open
-    trades, ORDERs and TRANSACTIONs are maintained and kept up-to-date within the object.
-    """
 
     class Meta:
 
@@ -35,6 +30,37 @@ class ACCOUNT (models.Model):
     balance = models.DecimalField (
         max_digits = 15, decimal_places = 6, default = 0.000000
     )
+
+    ###########################################################################################
+    ###########################################################################################
+    
+    @property
+    def info (self):
+
+        return [
+            self.id,
+            self.name,
+            self.insert_date,
+            self.home_currency,
+            self.profile,
+            self.margin_call_rate,
+            self.margin_rate
+        ]
+
+    @property
+    def insert_date (self):
+        return '%d' % time.mktime (self.stamp.insert_date.timetuple ())
+
+    @property
+    def margin_call_rate (self): ## @TODO!
+        return 1.0
+
+    @property
+    def margin_rate (self): ## @TODO!
+        return 1.0
+
+    ###########################################################################################
+    ###########################################################################################
 
     ## void close(LIMIT_ORDER lo)
     def close_limit_order (self, lo):
@@ -260,16 +286,47 @@ class ACCOUNT (models.Model):
         """
         self.profile = new_profile
 
-    ###########################################################################
-    ###########################################################################
+    ###########################################################################################
+    ###########################################################################################
     
-    ## java.lang.String toString()
     def __unicode__ (self):
         
         return "%s" % self.name
 
-###############################################################################
-###############################################################################
+###############################################################################################
+###############################################################################################
+
+class WRAP:
+
+    def invoke (cls, method, *args):
+
+        return getattr (WRAP, method)(cls, method, *args)
+
+    invoke = staticmethod (invoke)
+
+    def get_info (cls, method, session_token, account_id):
+
+        session = SESSION.objects.get (
+            token = session_token, stamp__delete_date__isnull = True
+        )
+
+        account = session.user.accounts.get (
+            id = account_id
+        )
+
+        return '%s|%s|%s|%s' % (cls, method, session_token, '|'.join (
+            map (lambda value: value and str (value) or str (None), account.info)
+        ))
+
+    get_info = staticmethod (get_info)
+    
+###############################################################################################
+###############################################################################################
+
+ACCOUNT.invoke = staticmethod (WRAP.invoke)
+
+###############################################################################################
+###############################################################################################
 
 if __name__ == "__main__":
 

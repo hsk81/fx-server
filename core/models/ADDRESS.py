@@ -3,14 +3,14 @@
 __author__ = "hsk81"
 __date__ = "$Apr 22, 2011 2:50:14 PM$"
 
-###############################################################################
-###############################################################################
+###############################################################################################
+###############################################################################################
 
 from django.db import models
 from core.models import *
 
-###############################################################################
-###############################################################################
+###############################################################################################
+###############################################################################################
 
 class ADDRESS (models.Model):
 
@@ -29,49 +29,58 @@ class ADDRESS (models.Model):
     city = models.CharField (max_length = 256)
     country = models.CharField (max_length = 256)
 
-    def full_address (self, show_blank_line2 = False):
+    def full_address (self, delimiter = '\n', show_blank_line2 = False):
         """
         Returns string representation for this ADDRESS.
         """
         if show_blank_line2:
-            return "%s\n%s\n%s %s\n%s" % (
-                self.line1, self.line2, self.zip, self.city, self.country
+            return "%s%s%s%s%s %s%s%s" % (
+                self.line1, delimiter,
+                self.line2, delimiter,
+                self.zip,
+                self.city, delimiter,
+                self.country
             )
         else:
-            return (self.line2 != "") and (
-                "%s\n%s\n%s %s\n%s" % (
-                    self.line1, self.line2, self.zip, self.city, self.country
-                )
-            ) or (
-                "%s\n%s %s\n%s" % (
-                    self.line1, self.zip, self.city, self.country
-                )
-            )
+            return (self.line2 != "") and ("%s%s%s%s%s %s%s%s" % (
+                self.line1, delimiter,
+                self.line2, delimiter,
+                self.zip,
+                self.city, delimiter,
+                self.country
+            )) or ("%s%s%s %s%s%s" % (
+                self.line1, delimiter,
+                self.zip,
+                self.city, delimiter,
+                self.country
+            ))
 
-    def short_address (self, show_blank_line2 = False):
+    def short_address (self, delimiter = '\n', show_blank_line2 = False):
         """
         Returns string representation for this ADDRESS.
         """
         if show_blank_line2:
-            return "%s\n%s\n%s %s" % (
-                self.line1, self.line2, self.zip, self.city
+            return "%s%s%s%s%s %s" % (
+                self.line1, delimiter,
+                self.line2, delimiter,
+                self.zip,
+                self.city
             )
         else:
-            return (self.line2 != "") and (
-                "%s\n%s\n%s %s" % (self.line1, self.line2, self.zip, self.city)
-            ) or (
-                "%s\n%s %s" % (self.line1, self.zip, self.city)
-            )
-
-
+            return (self.line2 != "") and ("%s%s%s%s%s %s" % (
+                self.line1, delimiter, self.line2, delimiter, self.zip, self.city
+            )) or ("%s%s%s %s" % (
+                self.line1, delimiter, self.zip, self.city
+            ))
+            
     def __unicode__ (self):
         """
         Returns string representation for this ADDRESS.
         """
         return self.short_address ()
 
-###############################################################################
-###############################################################################
+###############################################################################################
+###############################################################################################
 
 if __name__ == "__main__":
 

@@ -16,28 +16,18 @@ from django.db import models
 
 class CLIENT (models.Model):
 
-    """
-    A CLIENT object facilitates communication with foreign exchange servers.
-    Once connected the CLIENT object provides access to two root objects: USER
-    and RATE_TABLE.
-    """
-
     class Meta:
 
         app_label = 'core'
         verbose_name_plural = 'client'
+
+    server_time = property (lambda self: mktime (datetime.now ().timetuple ()))
 
     ###########################################################################################
     def __init__ (self, *args, **kwargs):
     ###########################################################################################
 
         super (CLIENT, self).__init__ (*args, **kwargs)
-
-    ###########################################################################################
-    def get_server_time (self):
-    ###########################################################################################
-
-        return mktime (datetime.now ().timetuple ())
 
     ###########################################################################################
     def login (self, username, password, ip_address): ##TODO: DB transactions?
@@ -112,11 +102,9 @@ class CLIENT (models.Model):
     def logout (self, session_token):
     ###########################################################################################
 
-        sessions = SESSION.objects.filter (token = session_token)
-        if not bool (sessions): return 'SESSION_ERROR'
+        for session in SESSION.objects.filter (token = session_token):
 
-        for session in sessions:
-            session.delete_date = datetime.now ()
+            session.stamp.delete_date = datetime.now ()
             session.save ()
 
         return 'DISCONNECTED'
@@ -158,7 +146,7 @@ class WRAP:
 
     def get_server_time (cls, method):
 
-        return '%s|%s|%d' % (cls, method, CLIENT ().get_server_time ())
+        return '%s|%s|%d' % (cls, method, CLIENT ().server_time)
 
     get_server_time = staticmethod (get_server_time)
 

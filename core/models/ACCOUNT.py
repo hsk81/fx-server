@@ -27,9 +27,9 @@ class ACCOUNT (models.Model):
     profile = models.CharField (max_length = 256, blank = True, default = '')
     home_currency = models.CharField (max_length = 3)
 
-    balance = models.DecimalField (
-        max_digits = 15, decimal_places = 6, default = 0.000000
-    )
+    balance = models.DecimalField (max_digits = 15, decimal_places = 6, default = 0.000000)
+    margin_call_rate = models.DecimalField (max_digits = 3, decimal_places = 2, default = 0.50)
+    margin_rate = models.DecimalField (max_digits = 3, decimal_places = 2, default = 0.10)
 
     ###########################################################################################
     ###########################################################################################
@@ -51,15 +51,21 @@ class ACCOUNT (models.Model):
     def insert_date (self):
         return '%d' % time.mktime (self.stamp.insert_date.timetuple ())
 
-    @property
-    def margin_call_rate (self): ## @TODO!
-        return 1.0
-
-    @property
-    def margin_rate (self): ## @TODO!
-        return 1.0
-
     ###########################################################################################
+    ###########################################################################################
+
+    def get_margin_available (self):
+        """
+        Returns the most up-to-date margin available value, querying the server if neccessary.
+        """
+        raise NotImplementedError
+
+    def get_margin_used (self):
+        """
+        Returns the most up-to-date margin used value, querying the server if neccessary.
+        """
+        raise NotImplementedError
+
     ###########################################################################################
 
     ## void close(LIMIT_ORDER lo)
@@ -83,6 +89,8 @@ class ACCOUNT (models.Model):
         """
         raise NotImplementedError
 
+    ###########################################################################################
+    
     ## void execute(LIMIT_ORDER lo)
     def execute_limit_order (self, lo):
         """
@@ -97,85 +105,29 @@ class ACCOUNT (models.Model):
         """
         raise NotImplementedError
 
-    ## int getAccountId()
-    def get_account_id (self):
-        """
-        Returns the unique id number associated with this ACCOUNT.
-        """
-        return self.id
+    ###########################################################################################
 
-    ## java.lang.String getAccountName()
-    def get_account_name (self):
+    ## void modify(LIMIT_ORDER lo)
+    def modify_limit_order (self, lo):
         """
-        Returns the account name.
-        """
-        return "%s" % self.name
-
-    ## double getBalance()
-    def get_balance (self):
-        """
-        Returns the most up-to-date account balance, querying the server if
-        neccessary.
-        """
-        return self.balance
-
-    ## long getCreateDate()
-    def get_create_date (self):
-        """
-        Returns the creation date for this account expressed as a unix
-        timestamp.
-        """
-        return time.mktime (self.stamp.insert_date.timetuple ())
-
-    ## FXEventManager getEventManager()
-    def get_event_manager (self):
-        """
-        Gets the event manager for this account
+        Modifies the specified LIMIT_ORDER.
         """
         raise NotImplementedError
 
-    ## java.lang.String getHomeCurrency()
-    def get_home_currency (self):
+    ## void modify(MARKET_ORDER mo)
+    def modify_market_order (self, mo):
         """
-        Returns the home currency for this ACCOUNT.
-        """
-        return "%" % self.home_currency
-
-    ## double getMarginAvailable()
-    def get_margin_available (self):
-        """
-        Returns the most up-to-date margin available value, querying the
-        server if neccessary.
+        Modifies the specified MARKET_ORDER.
         """
         raise NotImplementedError
 
-    ## double getMarginCallRate()
-    def get_margin_call_rate (self):
-        """
-        Returns the margin call rate.
-        """
-        raise NotImplementedError
-
-    ## double getMarginRate()
-    def get_margin_rate (self):
-        """
-        Returns the margin rate.
-        """
-        raise NotImplementedError
-
-    ## double getMarginUsed()
-    def get_margin_used (self):
-        """
-        Returns the most up-to-date margin used value, querying the server if
-        neccessary.
-        """
-        raise NotImplementedError
+    ###########################################################################################
 
     ## java.util.Vector getOrders()
     def get_orders (self):
         """
-        Returns the vector of LIMIT_ORDERs held by this account, querying the
-        server if neccessary.
+        Returns the vector of LIMIT_ORDERs held by this account, querying the server if
+        neccessary.
         """
         raise NotImplementedError
 
@@ -185,6 +137,8 @@ class ACCOUNT (models.Model):
         Returns the LIMIT_ORDER with the given transaction number.
         """
         raise NotImplementedError
+
+    ###########################################################################################
 
     ## Position getPosition(FX_PAIR pair)
     def get_position (self, pair):
@@ -203,17 +157,12 @@ class ACCOUNT (models.Model):
     ## double getPositionValue()
     def get_position_value (self):
         """
-        Returns the most up-to-date values of all trades held by this account
-        based in home currency, querying the server if neccessary.
+        Returns the most up-to-date values of all trades held by this account based in home
+        currency, querying the server if neccessary.
         """
         raise NotImplementedError
 
-    ## java.lang.String getProfile()
-    def get_profile (self):
-        """
-        Returns the profile string for this ACCOUNT.
-        """
-        return "%s" % self.profile
+    ###########################################################################################
 
     ## double getRealizedPL()
     def get_realized_pl (self):
@@ -223,11 +172,21 @@ class ACCOUNT (models.Model):
         """
         raise NotImplementedError
 
+    ## double getUnrealizedPL()
+    def get_unrealized_pl (self):
+        """
+        Returns the most up-to-date unrealized profit/loss value, querying the server if
+        neccessary.
+        """
+        raise NotImplementedError
+
+    ###########################################################################################
+
     ## java.util.Vector getTrades()
     def get_trades (self):
         """
-        Returns the vector of MARKET_ORDERs currently held by this account,
-        querying the server if neccessary.
+        Returns the vector of MARKET_ORDERs currently held by this account, querying the server
+        if neccessary.
         """
         return MARKET_ORDER.objects.filter (account__id = self.id)
 
@@ -241,11 +200,13 @@ class ACCOUNT (models.Model):
             transaction_number = transaction_number
         )
 
+    ###########################################################################################
+
     ## java.util.Vector getTransactions()
     def get_transactions (self):
         """
-        Returns a vector of TRANSACTIONs that have recently occured on this
-        account, querying the server if neccessary.
+        Returns a vector of TRANSACTIONs that have recently occured on this account, querying
+        the server if neccessary.
         """
         raise NotImplementedError
 
@@ -255,36 +216,6 @@ class ACCOUNT (models.Model):
         Returns the TRANSACTION with the given transaction number.
         """
         raise NotImplementedError
-
-    ## double getUnrealizedPL()
-    def get_unrealized_pl (self):
-        """
-        Returns the most up-to-date unrealized profit/loss value, querying the
-        server if neccessary.
-        """
-        raise NotImplementedError
-
-    ## void modify(LIMIT_ORDER lo)
-    def modify_limit_order (self, lo):
-        """
-        Modifies the specified LIMIT_ORDER.
-        """
-        raise NotImplementedError
-
-    ## void modify(MARKET_ORDER mo)
-    def modify_market_order (self, mo):
-        """
-        Modifies the specified MARKET_ORDER.
-        """
-        raise NotImplementedError
-
-    ## void setProfile(java.lang.String newprofile)
-    def set_profile (self, new_profile):
-        """
-        Sends a profile string to be saved on the server and associated with
-        this ACCOUNT.
-        """
-        self.profile = new_profile
 
     ###########################################################################################
     ###########################################################################################

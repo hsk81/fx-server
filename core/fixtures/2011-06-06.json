@@ -41,7 +41,9 @@
             "stamp": 1, 
             "home_currency": "CHF", 
             "user": 2, 
-            "balance": "1000"
+            "balance": "1000",
+            "margin_call_rate": "0.50",
+            "margin_rate": "0.10"
         }
     }, 
     {

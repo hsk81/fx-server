@@ -6,10 +6,9 @@ __date__ = "$Apr 22, 2011 2:50:14 PM$"
 ###############################################################################################
 ###############################################################################################
 
-import time
-
 from core.models import *
 from django.db import models
+from datetime import datetime
 from django.contrib import auth
 
 ###############################################################################################
@@ -22,9 +21,49 @@ class USER (auth.models.User):
         app_label = 'core'
         verbose_name_plural = 'users'
 
+    stamp = models.ForeignKey (STAMP, editable = False)
     address = models.ForeignKey (ADDRESS)
     phone = models.CharField (max_length = 256)
     profile = models.CharField (max_length = 256, blank = True, default = '')
+
+    ###########################################################################################
+    ###########################################################################################
+
+    def save (self):
+
+        if not self.id:
+            self.stamp = STAMP.objects.create ()
+        else:
+            self.stamp.update_date = datetime.now ()
+            self.stamp.save ()
+
+        super (ACCOUNT, self).save ()
+
+    def delete (self):
+
+        if not self.stamp.delete_date:
+            self.stamp.update_date = datetime.now ()
+            self.stamp.delete_date = datetime.now ()
+            self.stamp.save ()
+        else:
+            pass ## no delete
+
+    ###########################################################################################
+    ###########################################################################################
+
+    @property
+    def insert_date (self): return self.stamp.insert_date
+    @property
+    def update_date (self): return self.stamp.update_date
+    @property
+    def delete_date (self): return self.stamp.delete_date
+
+    @property
+    def unix_insert_date (self): return self.stamp.unix_insert_date
+    @property
+    def unix_update_date (self): return self.stamp.unix_update_date
+    @property
+    def unix_delete_date (self): return self.stamp.unix_delete_date
 
     ###########################################################################################
     ###########################################################################################
@@ -36,17 +75,13 @@ class USER (auth.models.User):
             self.id,
             self.username,
             self.address.short_address (delimiter = ', '),
-            self.insert_date,
+            self.unix_insert_date,
             self.email,
             self.fullname,
             self.password,
             self.phone,
             self.profile
         ]
-
-    @property
-    def insert_date (self):
-        return '%d' % time.mktime (self.date_joined.timetuple ())
 
     @property
     def fullname (self):

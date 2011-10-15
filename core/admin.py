@@ -1,12 +1,19 @@
-from django.contrib import admin
+#! /usr/bin/python
+
+__author__ = "hsk81"
+__date__ = "$Apr 17, 2011 10:24:31 PM$"
+
+###############################################################################################
+###############################################################################################
+
 from core.models import *
+from django.contrib import admin
 
 ###############################################################################################
 ###############################################################################################
 
 admin.site.register (STAMP)
 admin.site.register (ADDRESS)
-admin.site.register (ACCOUNT)
 admin.site.register (SESSION)
 admin.site.register (LIMIT_ORDER)
 admin.site.register (MARKET_ORDER)
@@ -21,14 +28,30 @@ admin.site.register (CLIENT)
 class USERAdmin (admin.ModelAdmin):
 
     list_display = (
-        'id', 'first_name', 'last_name', 'username', 'last_login', 'is_active'
+        'id', 'first_name', 'last_name', 'username', 'last_login', 'is_active', 'delete_date'
     )
 
+    list_filter = ['is_active']
+    search_fields = ['first_name', 'last_name', 'username']
+    
 admin.site.register (USER, USERAdmin)
+
+class ACCOUNTAdmin (admin.ModelAdmin):
+
+    list_display = (
+        'id', 'name', 'user', 'balance', 'home_currency', 'margin_rate', 'delete_date'
+    )
+
+    list_filter = ['home_currency', 'margin_rate']
+    search_fields = ['name', 'home_currency', 'margin_rate']
+
+admin.site.register (ACCOUNT, ACCOUNTAdmin)
 
 class PAIRAdmin (admin.ModelAdmin):
 
     list_display = ('id','quote','base', 'active')
+    list_filter = ['quote','base']
+    search_fields = ['quote','base']
 
 admin.site.register (PAIR, PAIRAdmin)
 

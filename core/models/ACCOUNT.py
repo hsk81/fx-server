@@ -6,10 +6,9 @@ __date__ = "$Apr 22, 2011 2:50:14 PM$"
 ###############################################################################################
 ###############################################################################################
 
-import time
-
 from core.models import *
 from django.db import models
+from datetime import datetime
 
 ###############################################################################################
 ###############################################################################################
@@ -21,7 +20,7 @@ class ACCOUNT (models.Model):
         app_label = 'core'
         verbose_name_plural = 'accounts'
 
-    stamp = models.ForeignKey (STAMP)
+    stamp = models.ForeignKey (STAMP, editable = False)
     user = models.ForeignKey (USER, related_name = 'accounts')
     name = models.CharField (max_length = 256)
     profile = models.CharField (max_length = 256, blank = True, default = '')
@@ -33,6 +32,45 @@ class ACCOUNT (models.Model):
 
     ###########################################################################################
     ###########################################################################################
+
+    def save (self):
+
+        if not self.id:
+            self.stamp = STAMP.objects.create ()
+        else:
+            self.stamp.update_date = datetime.now ()
+            self.stamp.save ()
+
+        super (ACCOUNT, self).save ()
+
+    def delete (self):
+
+        if not self.stamp.delete_date:
+            self.stamp.update_date = datetime.now ()
+            self.stamp.delete_date = datetime.now ()
+            self.stamp.save ()
+        else:
+            pass ## no delete
+
+    ###########################################################################################
+    ###########################################################################################
+    
+    @property
+    def insert_date (self): return self.stamp.insert_date
+    @property
+    def update_date (self): return self.stamp.update_date
+    @property
+    def delete_date (self): return self.stamp.delete_date
+
+    @property
+    def unix_insert_date (self): return self.stamp.unix_insert_date
+    @property
+    def unix_update_date (self): return self.stamp.unix_update_date
+    @property
+    def unix_delete_date (self): return self.stamp.unix_delete_date
+
+    ###########################################################################################
+    ###########################################################################################
     
     @property
     def info (self):
@@ -40,16 +78,12 @@ class ACCOUNT (models.Model):
         return [
             self.id,
             self.name,
-            self.insert_date,
+            self.unix_insert_date,
             self.home_currency,
             self.profile,
             self.margin_call_rate,
             self.margin_rate
         ]
-
-    @property
-    def insert_date (self):
-        return '%d' % time.mktime (self.stamp.insert_date.timetuple ())
 
     ###########################################################################################
     ###########################################################################################

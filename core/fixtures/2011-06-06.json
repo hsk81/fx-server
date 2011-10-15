@@ -1,13 +1,31 @@
 [
     {
-        "pk": 1, 
-        "model": "core.stamp", 
+        "pk": 1,
+        "model": "core.stamp",
         "fields": {
-            "update_date": "2011-07-07 12:15:00", 
-            "delete_date": null, 
+            "update_date": "2011-07-07 12:15:00",
+            "delete_date": null,
             "insert_date": "2011-07-07 12:15:00"
         }
-    }, 
+    },
+    {
+        "pk": 2,
+        "model": "core.stamp",
+        "fields": {
+            "update_date": "2011-07-07 12:15:00",
+            "delete_date": null,
+            "insert_date": "2011-07-07 12:15:00"
+        }
+    },
+    {
+        "pk": 3,
+        "model": "core.stamp",
+        "fields": {
+            "update_date": "2011-07-07 12:15:00",
+            "delete_date": null,
+            "insert_date": "2011-07-07 12:15:00"
+        }
+    },
     {
         "pk": 1, 
         "model": "core.address", 
@@ -20,9 +38,10 @@
         }
     }, 
     {
-        "pk": 2, 
+        "pk": 2,
         "model": "core.user", 
         "fields": {
+            "stamp": 1,
             "profile": "", 
             "phone": "+4179888888", 
             "user_permissions": [], 
@@ -33,19 +52,33 @@
         }
     }, 
     {
-        "pk": 1, 
-        "model": "core.account", 
+        "pk": 1,
+        "model": "core.account",
         "fields": {
-            "profile": "", 
-            "name": "primary", 
-            "stamp": 1, 
-            "home_currency": "CHF", 
-            "user": 2, 
+            "profile": "",
+            "name": "primus",
+            "stamp": 2,
+            "home_currency": "CHF",
+            "user": 2,
             "balance": "1000",
             "margin_call_rate": "0.50",
             "margin_rate": "0.10"
         }
-    }, 
+    },
+    {
+        "pk": 2,
+        "model": "core.account",
+        "fields": {
+            "profile": "",
+            "name": "secundus",
+            "stamp": 3,
+            "home_currency": "CHF",
+            "user": 2,
+            "balance": "1000",
+            "margin_call_rate": "0.50",
+            "margin_rate": "0.10"
+        }
+    },
     {
         "pk": 1, 
         "model": "core.pair", 

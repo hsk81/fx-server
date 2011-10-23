@@ -6,64 +6,25 @@ __date__ = "$Apr 22, 2011 2:50:14 PM$"
 ###############################################################################################
 ###############################################################################################
 
+from time import mktime
+from base.models import *
 from core.models import *
 from django.db import models
-from datetime import datetime
 from django.contrib import auth
 
 ###############################################################################################
 ###############################################################################################
 
-class USER (auth.models.User):
+class USER (BASE, auth.models.User):
 
     class Meta:
 
         app_label = 'core'
         verbose_name_plural = 'users'
 
-    stamp = models.ForeignKey (STAMP, editable = False)
     address = models.ForeignKey (ADDRESS)
     phone = models.CharField (max_length = 256)
     profile = models.CharField (max_length = 256, blank = True, default = '')
-
-    ###########################################################################################
-    ###########################################################################################
-
-    def save (self):
-
-        if not self.id:
-            self.stamp = STAMP.objects.create ()
-        else:
-            self.stamp.update_date = datetime.now ()
-            self.stamp.save ()
-
-        super (ACCOUNT, self).save ()
-
-    def delete (self):
-
-        if not self.stamp.delete_date:
-            self.stamp.update_date = datetime.now ()
-            self.stamp.delete_date = datetime.now ()
-            self.stamp.save ()
-        else:
-            pass ## no delete
-
-    ###########################################################################################
-    ###########################################################################################
-
-    @property
-    def insert_date (self): return self.stamp.insert_date
-    @property
-    def update_date (self): return self.stamp.update_date
-    @property
-    def delete_date (self): return self.stamp.delete_date
-
-    @property
-    def unix_insert_date (self): return self.stamp.unix_insert_date
-    @property
-    def unix_update_date (self): return self.stamp.unix_update_date
-    @property
-    def unix_delete_date (self): return self.stamp.unix_delete_date
 
     ###########################################################################################
     ###########################################################################################
@@ -75,7 +36,7 @@ class USER (auth.models.User):
             self.id,
             self.username,
             self.address.short_address (delimiter = ', '),
-            self.unix_insert_date,
+            mktime (self.date_joined),
             self.email,
             self.fullname,
             self.password,

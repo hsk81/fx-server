@@ -6,14 +6,15 @@ __date__ = "$Apr 29, 2011 8:28:01 PM$"
 ###############################################################################
 ###############################################################################
 
-from django.db import models
+from base.models import *
 from core.models import *
+from django.db import models
 
 ###############################################################################
 ###############################################################################
 
 ## public abstract class Order extends Object
-class ORDER (models.Model):
+class ORDER (BASE):
 
     """
     ORDER is an abstract base class encapsulating the basic components of an
@@ -27,7 +28,6 @@ class ORDER (models.Model):
         verbose_name_plural = 'orders'
         abstract = True
 
-    stamp = models.ForeignKey (STAMP)
     units = models.IntegerField ()
     pair = models.ForeignKey (PAIR)
 

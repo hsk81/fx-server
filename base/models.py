@@ -1,58 +1,61 @@
 #! /usr/bin/python
 
-__author__ = "hsk81"
-__date__ = "$Apr 22, 2011 2:50:14 PM$"
+__author__="hsk81"
+__date__ ="$Oct 23, 2011 7:58:06 PM$"
 
 ###############################################################################################
 ###############################################################################################
 
+from managers import *
 from time import mktime
-from core.models import *
+from datetime import datetime
 from django.db import models
 
 ###############################################################################################
 ###############################################################################################
 
-class STAMP (models.Model):
+class BASE (models.Model):
 
     class Meta:
 
-        app_label = 'core'
-        verbose_name_plural = 'stamps'
+        abstract = True
+        app_label = 'base'
+        verbose_name_plural = 'bases'
+
+    objects = BASE_MANAGER ()
 
     ###########################################################################################
     ###########################################################################################
 
-    def __init__ (self, *args, **kwargs):
-
-        super (STAMP, self).__init__ (*args, **kwargs)
-
-    ###########################################################################################
-    ###########################################################################################
-
-    insert_date = models.DateTimeField (auto_now_add = True)
-    update_date = models.DateTimeField (auto_now = True)
+    insert_date = models.DateTimeField (default = datetime.now (), auto_now_add = True)
+    update_date = models.DateTimeField (default = datetime.now (), auto_now = True)
     delete_date = models.DateTimeField (null = True, blank = True)
 
-    ###########################################################################################
-    ###########################################################################################
-
     @property
-    def unix_insert_date (self):
+    def insert_date_unix (self):
         return self.insert_date and '%d' % mktime (self.insert_date)
     @property
-    def unix_update_date (self):
+    def update_date_unix (self):
         return self.update_date and '%d' % mktime (self.update_date)
     @property
-    def unix_delete_date (self):
+    def delete_date_unix (self):
         return self.delete_date and '%d' % mktime (self.delete_date)
 
     ###########################################################################################
     ###########################################################################################
 
-    def __unicode__ (self):
+    def save (self):
 
-        return '%s' % self.update_date
+        super (BASE, self).save ()
+
+    def delete (self):
+        
+        if not self.delete_date:
+            self.update_date = datetime.now ()
+            self.delete_date = datetime.now ()
+            self.save ()
+        else:
+            pass ## no delete!
 
 ###############################################################################################
 ###############################################################################################

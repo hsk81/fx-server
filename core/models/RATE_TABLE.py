@@ -37,11 +37,7 @@ class RATE_TABLE (models.Model):
     ###########################################################################
     
     def get_history (pair, interval, num_ticks):
-        """
-        Obtain the current history (in terms of HISTORY_POINTs) of a given
-        currency pair at a given millisecond interval of a particular length
-        (num_ticks).
-        """
+
         result = []
         
         td = timedelta (0,0,1000 * interval)
@@ -75,17 +71,13 @@ class RATE_TABLE (models.Model):
     get_history = staticmethod (get_history)
     
     def get_rate (pair):
-        """
-        Returns the most recent TICK for the given PAIR.
-        """
+
         return TICK.objects.filter (pair = pair).order_by ('-datetime')[0]
 
     get_rate = staticmethod (get_rate)
 
     def logged_in (ip_address):
-        """
-        Check whether the session is active.
-        """
+
         sessions = SESSION.objects.filter (
             ip_address = ip_address,
             stamp__insert_date__lt = datetime.now (),

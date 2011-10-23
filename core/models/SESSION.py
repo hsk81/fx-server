@@ -6,13 +6,14 @@ __date__ = "$May 23, 2011 11:28:43 PM$"
 ###############################################################################################
 ###############################################################################################
 
-from django.db import models
+from base.models import *
 from core.models import *
+from django.db import models
 
 ###############################################################################################
 ###############################################################################################
 
-class SESSION (models.Model):
+class SESSION (BASE):
 
     """
     An SESSION object represents a session.
@@ -26,14 +27,6 @@ class SESSION (models.Model):
     ###########################################################################################
     ###########################################################################################
 
-    def __init__ (self, *args, **kwargs):
-
-        super (SESSION, self).__init__ (*args, **kwargs)
-
-    ###########################################################################################
-    ###########################################################################################
-
-    stamp = models.ForeignKey ('STAMP')
     user = models.ForeignKey ('USER')
     ip_address = models.IPAddressField ()
     token = models.CharField (max_length = 36, unique = True, default = TOKEN.generate)

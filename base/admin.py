@@ -6,22 +6,16 @@ __date__ ="$Oct 23, 2011 9:15:46 PM$"
 ###############################################################################################
 ###############################################################################################
 
-from django.contrib import admin
+from softdelete.admin import *
 
 ###############################################################################################
 ###############################################################################################
 
-class BASE_ADMIN (admin.ModelAdmin):
+class BASE_INLINE (SoftDeleteObjectInline): pass
+class BASE_ADMIN (SoftDeleteObjectAdmin): pass
 
-    def queryset (self, request):
-
-        qs = self.model._default_manager.all (with_deleted = True)
-        ordering = self.ordering or ()
-
-        if ordering:
-            qs = qs.order_by (*ordering)
-            
-        return qs
+class BASE_DELETE_RECORD_INLINE (SoftDeleteRecordInline): pass
+class BASE_DELETE_RECORD_ADMIN (SoftDeleteRecordAdmin): pass
 
 ###############################################################################################
 ###############################################################################################

@@ -22,13 +22,13 @@ class USER (BASE, auth.models.User):
         app_label = 'core'
         verbose_name_plural = 'users'
 
-    address = models.ForeignKey (ADDRESS)
+    address = models.ForeignKey (ADDRESS, related_name = 'users')
     phone = models.CharField (max_length = 256)
     profile = models.CharField (max_length = 256, blank = True, default = '')
 
     ###########################################################################################
     ###########################################################################################
-    
+
     @property
     def info (self):
 

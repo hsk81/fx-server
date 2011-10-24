@@ -44,7 +44,7 @@ SECRET_KEY = '13*th3x7^t)?2usz1g@8^?@*7ds$itrsz5c7rtx&5lmjq@ow^u'
 TEMPLATE_LOADERS = (
     'django.template.loaders.filesystem.Loader',
     'django.template.loaders.app_directories.Loader',
- ## 'django.template.loaders.eggs.Loader',
+    'django.template.loaders.eggs.Loader',
 )
 
 MIDDLEWARE_CLASSES = (
@@ -91,5 +91,5 @@ INSTALLED_APPS = (
     'django.contrib.admin',
     'django.contrib.admindocs',
 
-    'attribute', 'core'
+    'softdelete', 'attribute', 'core'
 )

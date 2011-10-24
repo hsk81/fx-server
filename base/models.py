@@ -10,14 +10,31 @@ from managers import *
 from time import mktime
 from datetime import datetime
 from django.db import models
+from softdelete.models import *
+from softdelete.admin import *
 
 ###############################################################################################
 ###############################################################################################
 
-class BASE (models.Model):
+class BASE_DELETE_RECORD (SoftDeleteRecord):
 
     class Meta:
 
+        proxy = True
+        app_label = 'base'
+        verbose_name_plural = 'base delete records'
+
+class BASE_QUERYSET (SoftDeleteQuerySet):
+
+    pass
+
+###############################################################################################
+###############################################################################################
+
+class BASE (SoftDeleteObject):
+
+    class Meta:
+        
         abstract = True
         app_label = 'base'
         verbose_name_plural = 'bases'
@@ -27,35 +44,40 @@ class BASE (models.Model):
     ###########################################################################################
     ###########################################################################################
 
-    insert_date = models.DateTimeField (default = datetime.now (), auto_now_add = True)
-    update_date = models.DateTimeField (default = datetime.now (), auto_now = True)
-    delete_date = models.DateTimeField (null = True, blank = True)
+    insert_date = models.DateTimeField (default = datetime.utcnow (), auto_now_add = True)
+    update_date = models.DateTimeField (default = datetime.utcnow (), auto_now = True)
+
+    def get_delete_date (self): return self.delete_at
+    def set_delete_date (self, value): self.delete_at = value
+    delete_date = property (get_delete_date, set_delete_date)
 
     @property
     def insert_date_unix (self):
-        return self.insert_date and '%d' % mktime (self.insert_date)
+        return self.insert_date and int (mktime (self.insert_date.timetuple ()))
     @property
     def update_date_unix (self):
-        return self.update_date and '%d' % mktime (self.update_date)
+        return self.update_date and int (mktime (self.update_date.timetuple ()))
     @property
     def delete_date_unix (self):
-        return self.delete_date and '%d' % mktime (self.delete_date)
+        return self.update_date and int (mktime (self.delete_date.timetuple ()))
 
     ###########################################################################################
     ###########################################################################################
 
-    def save (self):
+    def save (self, **kwargs):
 
-        super (BASE, self).save ()
+        self.update_date = datetime.utcnow ()
+        super (BASE, self).save (**kwargs)
 
-    def delete (self):
-        
-        if not self.delete_date:
-            self.update_date = datetime.now ()
-            self.delete_date = datetime.now ()
-            self.save ()
-        else:
-            pass ## no delete!
+    def delete (self, *args, **kwargs):
+
+        self.update_date = datetime.utcnow ()
+        super (BASE, self).delete (*args, **kwargs)
+
+    def undelete (self, *args, **kwargs):
+
+        self.update_date = datetime.utcnow ()
+        super (BASE, self).undelete (*args, **kwargs)
 
 ###############################################################################################
 ###############################################################################################

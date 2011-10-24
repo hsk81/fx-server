@@ -27,29 +27,29 @@ admin.site.register (CLIENT)
 class USERAdmin (admin.ModelAdmin):
 
     list_display = ('id',
-        'first_name', 'last_name', 'username', 'last_login', 'delete_date'
+        'first_name', 'last_name', 'username', 'last_login', ## 'delete_date'
     )
 
     search_fields = [
-        'first_name', 'last_name', 'username', 'last_login', 'delete_date'
+        'first_name', 'last_name', 'username', 'last_login', ## 'delete_date'
     ]
 
-    list_filter = ['is_active', 'last_login', 'delete_date']
+    list_filter = ['is_active', 'last_login',] ## 'delete_date']
     
 admin.site.register (USER, USERAdmin)
 
 class ACCOUNTAdmin (admin.ModelAdmin):
 
     list_display = ('id',
-        'name', 'user', 'balance', 'home_currency', 'margin_rate', 'delete_date'
+        'name', 'user', 'balance', 'home_currency', 'margin_rate', ## 'delete_date'
     )
 
     search_fields = ['id',
-        'name', 'user__username', 'balance', 'home_currency',  'margin_rate', 'delete_date'
+        'name', 'user__username', 'balance', 'home_currency',  'margin_rate', ## 'delete_date'
     ]
     
     list_filter = [
-        'home_currency', 'margin_rate', 'insert_date', 'update_date', 'delete_date'
+        'home_currency', 'margin_rate', 'insert_date', 'update_date', ## 'delete_date'
     ]
 
 admin.site.register (ACCOUNT, ACCOUNTAdmin)

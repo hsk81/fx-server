@@ -20,6 +20,9 @@ class ACCOUNT (BASE):
         app_label = 'core'
         verbose_name_plural = 'accounts'
 
+    ###########################################################################################
+    ###########################################################################################
+
     user = models.ForeignKey (USER, related_name = 'accounts')
     name = models.CharField (max_length = 256)
     profile = models.CharField (max_length = 256, blank = True, default = '')

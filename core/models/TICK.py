@@ -7,25 +7,19 @@ __date__ = "$May 8, 2011 12:16:49 PM$"
 ###############################################################################################
 
 from time import *
+from base.models import *
 from core.models import *
 from django.db import models
 
 ###############################################################################################
 ###############################################################################################
 
-class TICK (models.Model):
+class TICK (BASE):
 
     class Meta:
 
         app_label = 'core'
         verbose_name_plural = 'ticks'
-
-    ###########################################################################################
-    ###########################################################################################
-
-    def __init__ (self, *args, **kwargs):
-
-        super (TICK, self).__init__ (*args, **kwargs)
 
     ###########################################################################################
     ###########################################################################################
@@ -44,30 +38,18 @@ class TICK (models.Model):
     ###########################################################################################
     ###########################################################################################
     
-    def get_unixstamp (self):
-
-        return mktime (self.datetime.timetuple ())
-
+    def get_unixstamp (self): return mktime (self.datetime.timetuple ())
     unixstamp = property (get_unixstamp)
-
     get_unixstamp.short_description = 'unixstamp'
     get_unixstamp.admin_order_field = 'datetime'
     
-    def get_date (self):
-
-        return self.datetime.strftime ('%Y-%m-%d')
-
+    def get_date (self): return self.datetime.strftime ('%Y-%m-%d')
     date = property (get_date)
-    
     get_date.short_description = 'date'
     get_date.admin_order_field = 'datetime'
 
-    def get_time (self):
-
-        return self.datetime.strftime ('%H:%M:%S.%f')
-
+    def get_time (self): return self.datetime.strftime ('%H:%M:%S.%f')
     time = property (get_time)
-    
     get_time.short_description = 'time'
     get_time.admin_order_field = 'datetime'
 

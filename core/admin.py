@@ -6,6 +6,7 @@ __date__ = "$Apr 17, 2011 10:24:31 PM$"
 ###############################################################################################
 ###############################################################################################
 
+from base.admin import *
 from core.models import *
 from django.contrib import admin
 
@@ -18,51 +19,49 @@ admin.site.register (LIMIT_ORDER)
 admin.site.register (MARKET_ORDER)
 admin.site.register (STOP_LOSS_ORDER)
 admin.site.register (TAKE_PROFIT_ORDER)
-admin.site.register (RATE_TABLE)
-admin.site.register (CLIENT)
 
 ###############################################################################################
 ###############################################################################################
 
-class USERAdmin (admin.ModelAdmin):
+class USER_ADMIN (BASE_ADMIN):
 
     list_display = ('id',
-        'first_name', 'last_name', 'username', 'last_login', ## 'delete_date'
+        'first_name', 'last_name', 'username', 'last_login', #'delete_at'
     )
 
     search_fields = [
-        'first_name', 'last_name', 'username', 'last_login', ## 'delete_date'
+        'first_name', 'last_name', 'username', 'last_login', #'delete_at'
     ]
 
-    list_filter = ['is_active', 'last_login',] ## 'delete_date']
+    list_filter = ['is_active', 'last_login',] #'delete_at']
     
-admin.site.register (USER, USERAdmin)
+admin.site.register (USER, USER_ADMIN)
 
-class ACCOUNTAdmin (admin.ModelAdmin):
+class ACCOUNT_ADMIN (BASE_ADMIN):
 
     list_display = ('id',
-        'name', 'user', 'balance', 'home_currency', 'margin_rate', ## 'delete_date'
+        'name', 'user', 'balance', 'home_currency', 'margin_rate', #'delete_at'
     )
 
     search_fields = ['id',
-        'name', 'user__username', 'balance', 'home_currency',  'margin_rate', ## 'delete_date'
+        'name', 'user__username', 'balance', 'home_currency', 'margin_rate', #'delete_at'
     ]
     
     list_filter = [
-        'home_currency', 'margin_rate', 'insert_date', 'update_date', ## 'delete_date'
+        'home_currency', 'margin_rate', #'insert_at', 'update_at', 'delete_at'
     ]
 
-admin.site.register (ACCOUNT, ACCOUNTAdmin)
+admin.site.register (ACCOUNT, ACCOUNT_ADMIN)
 
-class PAIRAdmin (admin.ModelAdmin):
+class PAIR_ADMIN (BASE_ADMIN):
 
     list_display = ('id', 'quote', 'base', 'active')
     search_fields = ['quote', 'base', 'active']
     list_filter = ['quote', 'base', 'active']
 
-admin.site.register (PAIR, PAIRAdmin)
+admin.site.register (PAIR, PAIR_ADMIN)
 
-class TICKAdmin (admin.ModelAdmin):
+class TICK_ADMIN (BASE_ADMIN):
 
     list_display = ('id', 'get_date', 'get_time', 'ask', 'bid', 'pair')
     search_fields = ['datetime', 'ask', 'bid']
@@ -70,7 +69,7 @@ class TICKAdmin (admin.ModelAdmin):
     date_hierarchy = 'datetime'
     time_hierarchy = 'datetime'
 
-admin.site.register (TICK, TICKAdmin)
+admin.site.register (TICK, TICK_ADMIN)
 
 ###############################################################################################
 ###############################################################################################

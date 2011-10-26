@@ -15,9 +15,9 @@ import OpenSSL
 class TOKEN:
 
     def generate (num_bytes = 16):
-
+    
         return uuid.UUID (bytes = OpenSSL.rand.bytes (num_bytes))
-
+    
     generate = staticmethod (generate)
 
 ###############################################################################################

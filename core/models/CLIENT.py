@@ -8,30 +8,23 @@ __date__ = "$May 14, 2011 5:43:02 PM$"
 
 from time import *
 from datetime import *
+from base.models import *
 from core.models import *
-from django.db import models
 
 ###############################################################################################
 ###############################################################################################
 
-class CLIENT (models.Model):
+class CLIENT (BASE):
 
-    class Meta:
-
-        app_label = 'core'
-        verbose_name_plural = 'client'
+    ###########################################################################################
+    ###########################################################################################
 
     server_time = property (lambda self: mktime (datetime.now ().timetuple ()))
 
     ###########################################################################################
-    def __init__ (self, *args, **kwargs):
     ###########################################################################################
 
-        super (CLIENT, self).__init__ (*args, **kwargs)
-
-    ###########################################################################################
     def login (self, username, password, ip_address): ##TODO: DB transactions?
-    ###########################################################################################
 
         users_by_username = USER.objects.filter (username = username)
         if not bool (users_by_username): return 'INVALID_USER_ERROR'
@@ -81,9 +74,7 @@ class CLIENT (models.Model):
 
         return 'CONNECTED|%s' % session.token
 
-    ###########################################################################################
     def refresh (self, session_token):
-    ###########################################################################################
 
         sessions = SESSION.objects.filter (token = session_token)
         if not bool (sessions): return 'SESSION_ERROR'
@@ -98,9 +89,7 @@ class CLIENT (models.Model):
 
         return result
 
-    ###########################################################################################
     def logout (self, session_token):
-    ###########################################################################################
 
         for session in SESSION.objects.filter (token = session_token):
 

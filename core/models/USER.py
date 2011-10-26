@@ -22,6 +22,9 @@ class USER (BASE, auth.models.User):
         app_label = 'core'
         verbose_name_plural = 'users'
 
+    ###########################################################################################
+    ###########################################################################################
+
     address = models.ForeignKey (ADDRESS, related_name = 'users')
     phone = models.CharField (max_length = 256)
     profile = models.CharField (max_length = 256, blank = True, default = '')
@@ -60,6 +63,9 @@ class USER (BASE, auth.models.User):
         else:
             return None
         
+    ###########################################################################################
+    ###########################################################################################
+
     def __unicode__ (self):
 
         if self.last_name != None and self.last_name != "" and \

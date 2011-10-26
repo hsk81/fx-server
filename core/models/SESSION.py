@@ -15,10 +15,6 @@ from django.db import models
 
 class SESSION (BASE):
 
-    """
-    An SESSION object represents a session.
-    """
-
     class Meta:
 
         app_label = 'core'

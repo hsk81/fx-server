@@ -14,7 +14,7 @@ from softdelete.admin import *
 class BASE_INLINE (SoftDeleteObjectInline): pass
 class BASE_ADMIN (SoftDeleteObjectAdmin): pass
 
-class BASE_DELETE_RECORD_INLINE (SoftDeleteRecordInline): pass
+#class BASE_DELETE_RECORD_INLINE (SoftDeleteRecordInline): pass
 class BASE_DELETE_RECORD_ADMIN (SoftDeleteRecordAdmin): pass
 
 ###############################################################################################

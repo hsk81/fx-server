@@ -40,37 +40,33 @@ class CLIENT (BASE):
             user = user,
             ip_address__lt = ip_address,
             ip_address__gt = ip_address,
-            stamp__insert_date__lt = datetime.now (),
-            stamp__delete_date__isnull = True
+            insert_at__lt = datetime.utcnow (),
+            deleted_at__isnull = True
         )
 
         if bool (sessions_with_other_ip_addresses):
+            
             return 'SESSION_ERROR'
 
         sessions_with_same_ip_addresses = SESSION.objects.filter (
             user = user,
             ip_address = ip_address,
-            stamp__insert_date__lt = datetime.now (),
-            stamp__delete_date__isnull = True
+            insert_at__lt = datetime.utcnow (),
+            deleted_at__isnull = True
         )
 
         if not bool (sessions_with_same_ip_addresses):
 
             session = SESSION.objects.create (
                 user = user,
-                ip_address = ip_address,
-                stamp = STAMP.objects.create ()
+                ip_address = ip_address
             )
 
         else:
 
             for session in sessions_with_same_ip_addresses:
 
-                old_stamp = session.stamp
-                new_stamp = STAMP.objects.create ()
-                session.stamp = new_stamp
-                session.save ()
-                old_stamp.delete ()
+                session.save () ## refresh update_at!
 
         return 'CONNECTED|%s' % session.token
 
@@ -93,8 +89,7 @@ class CLIENT (BASE):
 
         for session in SESSION.objects.filter (token = session_token):
 
-            session.stamp.delete_date = datetime.now ()
-            session.save ()
+            session.delete ()
 
         return 'DISCONNECTED'
     

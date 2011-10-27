@@ -31,6 +31,18 @@ class BASE (SoftDeleteObject):
     insert_at = models.DateTimeField (default = datetime.utcnow (), auto_now_add = True)
     update_at = models.DateTimeField (default = datetime.utcnow (), auto_now = True)
 
+    def get_insert_date (self): return self.insert_at
+    def set_insert_date (self, value): self.insert_at = value
+    insert_date = property (get_insert_date, set_insert_date)
+
+    def get_update_date (self): return self.update_at
+    def set_update_date (self, value): self.update_at = value
+    update_date = property (get_update_date, set_update_date)
+
+    def get_delete_date (self): return self.deleted_at
+    def set_delete_date (self, value): self.deleted_at = value
+    delete_date = property (get_delete_date, set_delete_date)
+
     ###########################################################################################
     ###########################################################################################
 

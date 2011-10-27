@@ -26,29 +26,29 @@ admin.site.register (TAKE_PROFIT_ORDER)
 class USER_ADMIN (BASE_ADMIN):
 
     list_display = ('id',
-        'first_name', 'last_name', 'username', 'last_login', #'delete_at'
+        'first_name', 'last_name', 'username', 'last_login', 'deleted_at'
     )
 
     search_fields = [
-        'first_name', 'last_name', 'username', 'last_login', #'delete_at'
+        'first_name', 'last_name', 'username', 'last_login', 'deleted_at'
     ]
 
-    list_filter = ['is_active', 'last_login',] #'delete_at']
+    list_filter = ['is_active', 'last_login', 'deleted_at']
     
 admin.site.register (USER, USER_ADMIN)
 
 class ACCOUNT_ADMIN (BASE_ADMIN):
 
     list_display = ('id',
-        'name', 'user', 'balance', 'home_currency', 'margin_rate', #'delete_at'
+        'name', 'user', 'balance', 'home_currency', 'margin_rate', 'deleted_at'
     )
 
     search_fields = ['id',
-        'name', 'user__username', 'balance', 'home_currency', 'margin_rate', #'delete_at'
+        'name', 'user__username', 'balance', 'home_currency', 'margin_rate', 'deleted_at'
     ]
     
     list_filter = [
-        'home_currency', 'margin_rate', #'insert_at', 'update_at', 'delete_at'
+        'home_currency', 'margin_rate', 'insert_at', 'update_at', 'deleted_at'
     ]
 
 admin.site.register (ACCOUNT, ACCOUNT_ADMIN)

@@ -234,13 +234,8 @@ class WRAP:
 
     def get_info (cls, method, session_token, account_id):
 
-        session = SESSION.objects.get (
-            token = session_token, stamp__delete_date__isnull = True
-        )
-
-        account = session.user.accounts.get (
-            id = account_id
-        )
+        session = SESSION.objects.get (token = session_token, deleted_at__isnull = True)
+        account = session.user.accounts.get (id = account_id)
 
         return '%s|%s|%s|%s' % (cls, method, session_token, '|'.join (
             map (lambda value: value and str (value) or str (None), account.info)

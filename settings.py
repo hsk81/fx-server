@@ -91,5 +91,5 @@ INSTALLED_APPS = (
     'django.contrib.admin',
     'django.contrib.admindocs',
 
-    'softdelete', 'attribute', 'core'
+    'attribute', 'core'
 )

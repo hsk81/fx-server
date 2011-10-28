@@ -6,16 +6,18 @@ __date__ ="$Oct 23, 2011 9:15:46 PM$"
 ###############################################################################################
 ###############################################################################################
 
-from softdelete.admin import *
+from django.contrib import admin
 
 ###############################################################################################
 ###############################################################################################
 
-class BASE_INLINE (SoftDeleteObjectInline): pass
-class BASE_ADMIN (SoftDeleteObjectAdmin): pass
+class BASE_INLINE (admin.TabularInline):
 
-#class BASE_DELETE_RECORD_INLINE (SoftDeleteRecordInline): pass
-class BASE_DELETE_RECORD_ADMIN (SoftDeleteRecordAdmin): pass
+    pass ## TODO!
+
+class BASE_ADMIN (admin.ModelAdmin): 
+
+    pass ## TODO!
 
 ###############################################################################################
 ###############################################################################################

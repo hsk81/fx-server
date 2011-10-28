@@ -40,8 +40,8 @@ class CLIENT (BASE):
             user = user,
             ip_address__lt = ip_address,
             ip_address__gt = ip_address,
-            insert_at__lt = datetime.utcnow (),
-            deleted_at__isnull = True
+            insert_date__lt = datetime.utcnow (),
+            delete_date__isnull = True
         )
 
         if bool (sessions_with_other_ip_addresses):
@@ -51,8 +51,8 @@ class CLIENT (BASE):
         sessions_with_same_ip_addresses = SESSION.objects.filter (
             user = user,
             ip_address = ip_address,
-            insert_at__lt = datetime.utcnow (),
-            deleted_at__isnull = True
+            insert_date__lt = datetime.utcnow (),
+            delete_date__isnull = True
         )
 
         if not bool (sessions_with_same_ip_addresses):
@@ -66,7 +66,7 @@ class CLIENT (BASE):
 
             for session in sessions_with_same_ip_addresses:
 
-                session.save () ## refresh update_at!
+                session.save () ## refresh update_date!
 
         return 'CONNECTED|%s' % session.token
 

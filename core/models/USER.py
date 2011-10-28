@@ -95,7 +95,7 @@ class WRAP:
     def get_info (cls, method, session_token):
 
         session = SESSION.objects.get (
-            token = session_token, deleted_at__isnull = True
+            token = session_token, delete_date__isnull = True
         )
 
         return '%s|%s|%s|%s' % (cls, method, session_token, '|'.join (
@@ -107,7 +107,7 @@ class WRAP:
     def get_accounts (cls, method, session_token):
 
         session = SESSION.objects.get (
-            token = session_token, deleted_at__isnull = True
+            token = session_token, delete_date__isnull = True
         )
 
         return '%s|%s|%s|%s' % (cls, method, session_token,

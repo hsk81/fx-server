@@ -6,42 +6,33 @@ __date__ ="$Oct 23, 2011 7:58:06 PM$"
 ###############################################################################################
 ###############################################################################################
 
-from managers import *
+import signals
+import managers
+
 from time import mktime
-from django.db import models
 from datetime import datetime
-from softdelete.models import *
+from django.db import models
+from django.conf import settings
 
 ###############################################################################################
 ###############################################################################################
 
-class BASE (SoftDeleteObject):
+class BASE (models.Model):
 
     class Meta:
         
         abstract = True
         app_label = 'base'
         verbose_name_plural = 'bases'
-
-    objects = BASE_MANAGER ()
+        
+    objects = managers.BASE_MANAGER ()
 
     ###########################################################################################
     ###########################################################################################
 
+    deleted_at = models.DateTimeField (blank=True, null=True, default=None)
     insert_at = models.DateTimeField (default = datetime.utcnow (), auto_now_add = True)
     update_at = models.DateTimeField (default = datetime.utcnow (), auto_now = True)
-
-    def get_insert_date (self): return self.insert_at
-    def set_insert_date (self, value): self.insert_at = value
-    insert_date = property (get_insert_date, set_insert_date)
-
-    def get_update_date (self): return self.update_at
-    def set_update_date (self, value): self.update_at = value
-    update_date = property (get_update_date, set_update_date)
-
-    def get_delete_date (self): return self.deleted_at
-    def set_delete_date (self, value): self.deleted_at = value
-    delete_date = property (get_delete_date, set_delete_date)
 
     ###########################################################################################
     ###########################################################################################
@@ -58,39 +49,62 @@ class BASE (SoftDeleteObject):
 
     ###########################################################################################
     ###########################################################################################
+    
+    def get_deleted(self):
+        
+        return self.deleted_at != None
+
+    def set_deleted(self, value):
+
+        if value and not self.deleted_at:
+            self.deleted_at = datetime.utcnow ()
+        elif not value and self.deleted_at:
+            self.deleted_at = None
+
+    deleted = property (get_deleted, set_deleted)
+
+    ###########################################################################################
+    ###########################################################################################
+
+    def _do_delete (self, related):
+
+        try:
+            getattr (self, related.get_accessor_name ()).all ().delete ()
+        except:
+            getattr (self, related.get_accessor_name ()).__class__.objects.all ().delete ()
+
+    def delete(self, *args, **kwargs):
+        
+        if self.deleted_at:
+            super (BASE, self).delete (*args, **kwargs)
+
+        else:
+            using = kwargs.get ('using', settings.DATABASES['default'])
+            
+            models.signals.pre_delete.send (
+                sender =self.__class__, instance = self, using = using)
+            signals.pre_base_delete.send (
+                sender = self.__class__, instance = self, using = using)
+
+            self.update_at = datetime.utcnow ()
+            self.deleted_at = datetime.utcnow ()
+            self.save ()
+
+            for related in self._meta.get_all_related_objects ():                
+                self._do_delete (related)
+
+            models.signals.post_delete.send (
+                sender = self.__class__, instance = self, using = using)
+            signals.post_base_delete.send (
+                sender = self.__class__, instance = self, using = using)
+
+    ###########################################################################################
+    ###########################################################################################
 
     def save (self, **kwargs):
 
         self.update_at = datetime.utcnow ()
         super (BASE, self).save (**kwargs)
-
-    def delete (self, *args, **kwargs):
-
-        self.update_at = datetime.utcnow ()
-        super (BASE, self).delete (*args, **kwargs)
-
-    def undelete (self, *args, **kwargs):
-
-        self.update_at = datetime.utcnow ()
-        super (BASE, self).undelete (*args, **kwargs)
-
-###############################################################################################
-###############################################################################################
-
-class BASE_DELETE_RECORD (SoftDeleteRecord):
-
-    class Meta:
-
-        proxy = True
-        app_label = 'base'
-        verbose_name_plural = 'base delete records'
-
-###############################################################################################
-###############################################################################################
-
-class BASE_QUERYSET (SoftDeleteQuerySet):
-
-    pass
 
 ###############################################################################################
 ###############################################################################################

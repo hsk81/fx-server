@@ -1,7 +1,7 @@
 #! /usr/bin/python
 
-__author__="hsk81"
-__date__ ="$Oct 23, 2011 7:58:06 PM$"
+__author__ = "hsk81"
+__date__ = "$Oct 23, 2011 7:58:06 PM$"
 
 ###############################################################################################
 ###############################################################################################
@@ -68,7 +68,7 @@ class BASE (models.Model):
     ###########################################################################################
     ###########################################################################################
 
-    def delete(self, *args, **kwargs):
+    def delete (self, *args, **kwargs):
         
         if self.delete_date:
             super (BASE, self).delete (*args, **kwargs)
@@ -77,24 +77,25 @@ class BASE (models.Model):
             using = kwargs.get ('using', settings.DATABASES['default'])
             
             models.signals.pre_delete.send (
-                sender =self.__class__, instance = self, using = using)
+                sender = self.__class__, instance = self, using = using)
 
             self.update_date = datetime.utcnow ()
             self.delete_date = self.update_date
             self.save ()
 
-            for related in self._meta.get_all_related_objects ():                
-                self._do_delete (related)
+            for related in self._meta.get_all_related_objects ():
+
+                accessor_name = related.get_accessor_name ()
+
+                try:
+                    getattr (self, accessor_name).all () \
+                        .delete (*args, **kwargs)
+                except:
+                    getattr (self, accessor_name).__class__.objects.all () \
+                        .delete (*args, **kwargs)
 
             models.signals.post_delete.send (
                 sender = self.__class__, instance = self, using = using)
-
-    def _do_delete (self, related):
-
-        try:
-            getattr (self, related.get_accessor_name ()).all ().delete ()
-        except:
-            getattr (self, related.get_accessor_name ()).__class__.objects.all ().delete ()
 
     ###########################################################################################
     ###########################################################################################
@@ -103,6 +104,14 @@ class BASE (models.Model):
 
         self.update_date = datetime.utcnow ()
         super (BASE, self).save (**kwargs)
+
+    ###########################################################################################
+    ###########################################################################################
+
+    def reload (self, objects):
+
+        self = objects.get (pk = self.pk)
+        return self
 
 ###############################################################################################
 ###############################################################################################

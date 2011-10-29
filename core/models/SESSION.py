@@ -23,7 +23,7 @@ class SESSION (BASE):
     ###########################################################################################
     ###########################################################################################
 
-    user = models.ForeignKey ('USER')
+    user = models.ForeignKey ('USER', related_name = 'sessions')
     ip_address = models.IPAddressField ()
     token = models.CharField (max_length = 36, unique = True, default = TOKEN.generate)
 

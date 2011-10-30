@@ -12,65 +12,76 @@ from django.test import TestCase
 
 class CORE_TEST (TestCase):
 
-    def assertDeleted (self, base, objects, with_reload = True):
+    ###########################################################################################
+    ###########################################################################################
 
-        if with_reload:
-            base = base.reload (objects)
-            
-        self.assertTrue (base.deleted)
+    def __init__ (self, *args, **kwargs):
+
+        super (CORE_TEST, self).__init__ (*args, **kwargs)
+
+        self.USER_ID = 2
+        self.ACCOUNT0_ID = 1
+        self.ACCOUNT1_ID = 2
+
+    ###########################################################################################
+    ###########################################################################################
+
+    def assertExists (self, object_id, manager):
+
+        object = manager.get (id = object_id)
+        self.assertFalse (object.deleted)
+
+        return object
+
+    def assertSoftDeleted (self, object, manager):
+
+        object = object.reload (manager)
+        self.assertTrue (object.deleted)
+
+    def assertHardDeleted (self, object, manager):
+
+        objects = manager.filter (id = object.id)
+        self.assertTrue (len (objects) == 0)
+
+    ###########################################################################################
+    ###########################################################################################
 
     def test_soft_delete (self):
 
-        users = USER.objects.all ()
-        user = users[0]
-        self.assertFalse (user.deleted)
-
-        accounts = ACCOUNT.objects.all ()
-        account0 = accounts[0]
-        self.assertFalse (account0.deleted)
-        account1 = accounts[1]
-        self.assertFalse (account1.deleted)
+        user = self.assertExists (self.USER_ID, USER.objects)
+        account0 = self.assertExists (self.ACCOUNT0_ID, ACCOUNT.objects)
+        account1 = self.assertExists (self.ACCOUNT1_ID, ACCOUNT.objects)
 
         user.delete () ## soft delete
-        self.assertDeleted (user, USER.objects)
-        self.assertDeleted (account0, ACCOUNT.objects)
-        self.assertDeleted (account1, ACCOUNT.objects)
+
+        self.assertSoftDeleted (user, USER.objects)
+        self.assertSoftDeleted (account0, ACCOUNT.objects)
+        self.assertSoftDeleted (account1, ACCOUNT.objects)
 
     def test_soft_delete_twice (self):
 
-        users = USER.objects.all ()
-        user = users[0]
-        self.assertFalse (user.deleted)
-
-        accounts = ACCOUNT.objects.all ()
-        account0 = accounts[0]
-        self.assertFalse (account0.deleted)
-        account1 = accounts[1]
-        self.assertFalse (account1.deleted)
+        user = self.assertExists (self.USER_ID, USER.objects)
+        account0 = self.assertExists (self.ACCOUNT0_ID, ACCOUNT.objects)
+        account1 = self.assertExists (self.ACCOUNT1_ID, ACCOUNT.objects)
 
         user.delete () ## soft delete
         user.delete () ## soft delete
-        self.assertDeleted (user, USER.objects)
-        self.assertDeleted (account0, ACCOUNT.objects)
-        self.assertDeleted (account1, ACCOUNT.objects)
+
+        self.assertSoftDeleted (user, USER.objects)
+        self.assertSoftDeleted (account0, ACCOUNT.objects)
+        self.assertSoftDeleted (account1, ACCOUNT.objects)
 
     def test_hard_delete (self):
 
-        users = USER.objects.all ()
-        user = users[0]
-        self.assertFalse (user.deleted)
-
-        accounts = ACCOUNT.objects.all ()
-        account0 = accounts[0]
-        self.assertFalse (account0.deleted)
-        account1 = accounts[1]
-        self.assertFalse (account1.deleted)
+        user = self.assertExists (self.USER_ID, USER.objects)
+        account0 = self.assertExists (self.ACCOUNT0_ID, ACCOUNT.objects)
+        account1 = self.assertExists (self.ACCOUNT1_ID, ACCOUNT.objects)
 
         user.delete (hard = True) ## hard delete
-        users = USER.objects.all ()
-        self.assertTrue (len (users) == 0)
-        accounts = ACCOUNT.objects.all ()
-        self.assertTrue (len (accounts) == 0)
+
+        self.assertHardDeleted (user, USER.objects)
+        self.assertHardDeleted (account0, ACCOUNT.objects)
+        self.assertHardDeleted (account1, ACCOUNT.objects)
 
 ###############################################################################################
 ###############################################################################################

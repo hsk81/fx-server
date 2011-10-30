@@ -69,11 +69,11 @@ class BASE (models.Model):
     ###########################################################################################
 
     def delete (self, *args, **kwargs):
-        
-        if self.delete_date:
+
+        if kwargs.pop ('hard', False):
             super (BASE, self).delete (*args, **kwargs)
 
-        else:
+        elif not self.delete_date:
             using = kwargs.get ('using', settings.DATABASES['default'])
             
             models.signals.pre_delete.send (

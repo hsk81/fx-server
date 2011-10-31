@@ -40,7 +40,7 @@ class CORE_TEST (TestCase):
 
     def assertHardDeleted (self, object, manager):
 
-        objects = manager.filter (id = object.id)
+        objects = manager.filter (pk = object.pk)
         self.assertTrue (len (objects) == 0)
 
     ###########################################################################################
@@ -52,19 +52,6 @@ class CORE_TEST (TestCase):
         account0 = self.assertExists (self.ACCOUNT0_ID, ACCOUNT.objects)
         account1 = self.assertExists (self.ACCOUNT1_ID, ACCOUNT.objects)
 
-        user.delete () ## soft delete
-
-        self.assertSoftDeleted (user, USER.objects)
-        self.assertSoftDeleted (account0, ACCOUNT.objects)
-        self.assertSoftDeleted (account1, ACCOUNT.objects)
-
-    def test_soft_delete_twice (self):
-
-        user = self.assertExists (self.USER_ID, USER.objects)
-        account0 = self.assertExists (self.ACCOUNT0_ID, ACCOUNT.objects)
-        account1 = self.assertExists (self.ACCOUNT1_ID, ACCOUNT.objects)
-
-        user.delete () ## soft delete
         user.delete () ## soft delete
 
         self.assertSoftDeleted (user, USER.objects)

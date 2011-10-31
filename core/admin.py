@@ -26,29 +26,29 @@ admin.site.register (TAKE_PROFIT_ORDER)
 class USER_ADMIN (BASE_ADMIN):
 
     list_display = ('id',
-        'first_name', 'last_name', 'username', 'last_login', 'deleted_at'
+        'first_name', 'last_name', 'username', 'last_login', 'delete_date'
     )
 
-    search_fields = [
-        'first_name', 'last_name', 'username', 'last_login', 'deleted_at'
+    search_fields = ['id',
+        'first_name', 'last_name', 'username', 'last_login', 'delete_date'
     ]
 
-    list_filter = ['is_active', 'last_login', 'deleted_at']
+    list_filter = ['is_active', 'last_login', 'delete_date']
     
 admin.site.register (USER, USER_ADMIN)
 
 class ACCOUNT_ADMIN (BASE_ADMIN):
 
     list_display = ('id',
-        'name', 'user', 'balance', 'home_currency', 'margin_rate', 'deleted_at'
+        'name', 'user', 'balance', 'home_currency', 'margin_rate', 'delete_date'
     )
 
     search_fields = ['id',
-        'name', 'user__username', 'balance', 'home_currency', 'margin_rate', 'deleted_at'
+        'name', 'user__username', 'balance', 'home_currency', 'margin_rate', 'delete_date'
     ]
     
     list_filter = [
-        'home_currency', 'margin_rate', 'insert_at', 'update_at', 'deleted_at'
+        'home_currency', 'margin_rate', 'delete_date'
     ]
 
 admin.site.register (ACCOUNT, ACCOUNT_ADMIN)
@@ -56,7 +56,7 @@ admin.site.register (ACCOUNT, ACCOUNT_ADMIN)
 class PAIR_ADMIN (BASE_ADMIN):
 
     list_display = ('id', 'quote', 'base', 'active')
-    search_fields = ['quote', 'base', 'active']
+    search_fields = ['id','quote', 'base', 'active']
     list_filter = ['quote', 'base', 'active']
 
 admin.site.register (PAIR, PAIR_ADMIN)
@@ -64,7 +64,7 @@ admin.site.register (PAIR, PAIR_ADMIN)
 class TICK_ADMIN (BASE_ADMIN):
 
     list_display = ('id', 'get_date', 'get_time', 'ask', 'bid', 'pair')
-    search_fields = ['datetime', 'ask', 'bid']
+    search_fields = ['id','datetime', 'ask', 'bid']
     list_filter = ['datetime', 'pair']
     date_hierarchy = 'datetime'
     time_hierarchy = 'datetime'

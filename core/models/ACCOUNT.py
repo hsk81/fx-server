@@ -39,6 +39,7 @@ class ACCOUNT (BASE):
     def info (self):
 
         return [
+            self.id,
             self.name,
             self.insert_date_unix,
             self.home_currency,

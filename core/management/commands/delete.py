@@ -163,7 +163,7 @@ class Command (BaseCommand):
 
                     else: ## delete only first tick;
 
-                        for t in ts: t.delete (); break
+                        for t in ts: t.delete (hard = True); break
                         srvlog.debug ('%s :: [--]' % line[:-1])
 
         #######################################################################################

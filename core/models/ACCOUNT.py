@@ -76,7 +76,7 @@ class ACCOUNT (BASE):
 
     def execute_market_order (self, mo):
 
-        return json.loads (mo)
+        return json.loads (mo) ## TODO!
 
     ###########################################################################################
 

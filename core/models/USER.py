@@ -86,31 +86,24 @@ class WRAP:
 
     def invoke (cls, method, *args):
 
-        return getattr (WRAP, method)(cls, method, *args)
+        return getattr (WRAP, method) (*args)
 
     invoke = staticmethod (invoke)
 
-    def get_info (cls, method, session_token):
+    def get_info (session_token):
 
-        session = SESSION.objects.get (
-            token = session_token, delete_date__isnull = True
-        )
+        session = SESSION.objects.get (token = session_token, delete_date__isnull = True)
 
-        return '%s|%s|%s|%s' % (cls, method, session_token, '|'.join (
-            map (lambda value: value and str (value) or str (None), session.user.info)
+        return '|'.join (map (
+            lambda value: value and str (value) or str (None), session.user.info
         ))
 
     get_info = staticmethod (get_info)
 
-    def get_accounts (cls, method, session_token):
+    def get_accounts (session_token):
 
-        session = SESSION.objects.get (
-            token = session_token, delete_date__isnull = True
-        )
-
-        return '%s|%s|%s|%s' % (cls, method, session_token,
-            '|'.join (map (lambda account: str (account.id), session.user.accounts.all ()))
-        )
+        session = SESSION.objects.get (token = session_token, delete_date__isnull = True)
+        return '|'.join (map (lambda account: str (account.id), session.user.accounts.all ()))
 
     get_accounts = staticmethod (get_accounts)
 

@@ -5,6 +5,7 @@ __date__ = "$May 11, 2011 9:18:32 PM$"
 ###############################################################################################
 
 from datetime import *
+from core.models import *
 
 ###############################################################################################
 ###############################################################################################
@@ -70,36 +71,29 @@ class WRAP:
 
     def invoke (cls, method, *args):
 
-        return getattr (WRAP, method)(cls, method, *args)
+        return getattr (WRAP, method) (*args)
 
     invoke = staticmethod (invoke)
 
-    def get_rate (cls, method, quote, base):
+    def get_rate (quote, base):
 
         pair = PAIR.objects.get (quote = quote, base = base)
         tick = RATE_TABLE.get_rate (pair)
 
-        return '%s|%s|%s|%s|%d|%0.6f|%0.6f' % (cls, method, quote, base,
-            tick.unixstamp, tick.bid, tick.ask
-        )
+        return '%d|%0.6f|%0.6f' % (tick.unixstamp, tick.bid, tick.ask)
 
     get_rate = staticmethod (get_rate)
 
-    def logged_in (cls, method, ip_address):
+    def logged_in (ip_address):
 
-        return '%s|%s|%s|%s' % (cls, method, ip_address,
-            RATE_TABLE.logged_in (ip_address)
-        )
+        return RATE_TABLE.logged_in (ip_address)
 
     logged_in = staticmethod (logged_in)
 
-    def get_history (cls, method, quote, base, interval, num_ticks):
+    def get_history (quote, base, interval, num_ticks):
 
         pair = PAIR.objects.get (quote = quote, base = base)
-
-        history = RATE_TABLE.get_history (
-             pair, int (interval), int (num_ticks)
-        )
+        history = RATE_TABLE.get_history (pair, int (interval), int (num_ticks))
 
         ts = ['%d|%0.6f|%0.6f|%0.6f|%0.6f|%0.6f|%0.6f|%0.6f|%0.6f' % (
             opn.unixstamp,
@@ -109,9 +103,7 @@ class WRAP:
             max.bid, max.ask
         ) for opn, clo, min, max in history]
 
-        return '%s|%s|%s|%s|%s|%s|%s' % (cls, method,
-            quote, base, interval, num_ticks, '|'.join (ts)
-        )
+        return '|'.join (ts)
 
     get_history = staticmethod (get_history)
 

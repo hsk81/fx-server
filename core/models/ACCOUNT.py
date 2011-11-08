@@ -39,7 +39,6 @@ class ACCOUNT (BASE):
     def info (self):
 
         return [
-            self.id,
             self.name,
             self.insert_date_unix,
             self.home_currency,
@@ -147,28 +146,26 @@ class WRAP:
 
     def invoke (cls, method, *args):
 
-        return getattr (WRAP, method)(cls, method, *args)
+        return getattr (WRAP, method) (*args)
 
     invoke = staticmethod (invoke)
 
-    def execute_market_order (cls, method, session_token, account_id, market_order):
+    def execute_market_order (session_token, account_id, market_order):
 
         session = SESSION.objects.get (token = session_token, delete_date__isnull = True)
         account = session.user.accounts.get (id = account_id)
 
-        return '%s|%s|%s|%s|%s|%s' % (cls, method, session_token, account_id, market_order,
-            account.execute_market_order (market_order)
-        )
+        return '%s' % account.execute_market_order (market_order)
 
     execute_market_order = staticmethod (execute_market_order)
 
-    def get_info (cls, method, session_token, account_id):
+    def get_info (session_token, account_id):
 
         session = SESSION.objects.get (token = session_token, delete_date__isnull = True)
         account = session.user.accounts.get (id = account_id)
 
-        return '%s|%s|%s|%s' % (cls, method, session_token, '|'.join (
-            map (lambda value: value and str (value) or str (None), account.info)
+        return '|'.join (map (
+            lambda value: value and str (value) or str (None), account.info
         ))
 
     get_info = staticmethod (get_info)

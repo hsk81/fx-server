@@ -98,37 +98,31 @@ class WRAP:
 
     def invoke (cls, method, *args):
 
-        return getattr (WRAP, method)(cls, method, *args)
+        return getattr (WRAP, method) (*args)
 
     invoke = staticmethod (invoke)
 
-    def login (cls, method, username, password, ip_address):
+    def login (username, password, ip_address):
 
-        return '%s|%s|%s|%s|%s|%s' % (cls, method, username, password, ip_address,
-            CLIENT ().login (username, password, ip_address)
-        )
+        return CLIENT ().login (username, password, ip_address)
 
     login = staticmethod (login)
 
-    def logout (cls, method, session_token):
+    def logout (session_token):
 
-        return '%s|%s|%s|%s' % (cls, method, session_token,
-            CLIENT ().logout (session_token)
-        )
+        return CLIENT ().logout (session_token)
 
     logout = staticmethod (logout)
 
-    def refresh (cls, method, session_token):
+    def refresh (session_token):
 
-        return '%s|%s|%s|%s' % (cls, method, session_token,
-            CLIENT ().refresh (session_token)
-        )
+        return CLIENT ().refresh (session_token)
 
     refresh = staticmethod (refresh)
 
-    def get_server_time (cls, method):
+    def get_server_time ():
 
-        return '%s|%s|%d' % (cls, method, CLIENT ().server_time)
+        return CLIENT ().server_time
 
     get_server_time = staticmethod (get_server_time)
 

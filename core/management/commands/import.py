@@ -5,13 +5,13 @@ __date__ = "$May 29, 2011 5:15:44 PM$"
 ###############################################################################################
 
 from decimal import *
-from datetime import *
 from optparse import *
 from django.db.models import *
 from django.db import transaction
 from django.core.management.base import *
 
 import logging
+import datetime
 
 ###############################################################################################
 ###############################################################################################
@@ -157,7 +157,7 @@ class Command (BaseCommand):
             for line in file:
             ###################################################################################
 
-                (d,t,b,a) = line.split (' '); dts = datetime.strptime (
+                (d,t,b,a) = line.split (' '); dts = datetime.datetime.strptime (
                     '%s %s' % (d,t), '%d/%m/%y %H:%M:%S'
                 )
 

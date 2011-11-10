@@ -4,11 +4,12 @@ __date__ = "$Apr 22, 2011 2:50:14 PM$"
 ###############################################################################################
 ###############################################################################################
 
-import json
-
 from base.models import *
 from core.models import *
 from django.db import models
+from django.core import serializers
+
+import json
 
 ###############################################################################################
 ###############################################################################################
@@ -74,9 +75,31 @@ class ACCOUNT (BASE):
         
         raise NotImplementedError
 
-    def execute_market_order (self, mo):
+    def execute_market_order (self, mo): 
 
-        return json.loads (mo) ## TODO!
+        ## TODO: Not thread safe ++> use transactions!
+        ## TODO: either simulate (price) matching or set price to last tick!
+        
+        ## TODO: if mo.take_profit != null: mo.take_profit.save ()
+        ## TODO: if mo.stop_loss != null: mo.stop_loss.save ()
+        ## TODO: if mo.close != null: mo.close.save ()
+
+        mo_fields = json.loads (mo)
+        mo_pair = mo_fields['pair']
+        pair = PAIR.objects.get (quote = mo_pair['quote'], base = mo_pair['base'])
+        mo_fields['pair'] = pair.id
+        mo_fields = json.dumps (mo_fields)
+        
+        market_orders = '[{"pk":%s,"model":"core.market_order","fields":%s}]' % (
+            MARKET_ORDER.objects.count () + 1, ## TODO: Not thread safe!
+            mo_fields
+        )
+
+        market_order = serializers.deserialize ('json', market_orders).next ()
+        market_order.save () ## INFO: Means 'create-or-save'!
+        market_orders = MARKET_ORDER.objects.filter (id = market_order.object.id)
+
+        return serializers.serialize ('json', market_orders)
 
     ###########################################################################################
 

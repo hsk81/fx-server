@@ -16,7 +16,7 @@ from django.contrib import admin
 admin.site.register (ADDRESS)
 admin.site.register (SESSION)
 admin.site.register (LIMIT_ORDER)
-admin.site.register (MARKET_ORDER)
+#admin.site.register (MARKET_ORDER)
 admin.site.register (STOP_LOSS_ORDER)
 admin.site.register (TAKE_PROFIT_ORDER)
 
@@ -70,6 +70,28 @@ class TICK_ADMIN (BASE_ADMIN):
     time_hierarchy = 'datetime'
 
 admin.site.register (TICK, TICK_ADMIN)
+
+class MARKET_ORDER_ADMIN (BASE_ADMIN):
+
+    list_display = ('id',
+        'pair', 'units', 'price',
+        'high_price_limit', 'low_price_limit',
+        'realized_pl',
+        'update_date',
+    )
+
+    search_fields = ['id',
+        'pair', 'units', 'price',
+        'high_price_limit', 'low_price_limit',
+        'realized_pl',
+        'update_date',
+    ]
+
+    list_filter = ['pair', 'insert_date', 'update_date', 'delete_date']
+    date_hierarchy = 'update_date'
+    time_hierarchy = 'update_date'
+
+admin.site.register (MARKET_ORDER, MARKET_ORDER_ADMIN)
 
 ###############################################################################################
 ###############################################################################################

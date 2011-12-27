@@ -91,8 +91,7 @@ class ACCOUNT (BASE):
         mo_fields = json.dumps (mo_fields)
         
         market_orders = '[{"pk":%s,"model":"core.market_order","fields":%s}]' % (
-            MARKET_ORDER.objects.count () + 1, ## TODO: Not thread safe!
-            mo_fields
+            MARKET_ORDER.objects.count () + 1, mo_fields ## TODO: Not thread safe!
         )
 
         market_order = serializers.deserialize ('json', market_orders).next ()

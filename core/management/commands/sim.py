@@ -10,6 +10,7 @@ from django.core.management.base import *
 
 import zmq
 import time
+import uuid
 import logging
 
 ###############################################################################################
@@ -116,21 +117,28 @@ class Command (BaseCommand):
             help='scale of simulation [default: %default]'
         ),
 
-        make_option ('-c', '--uri-client',
+        make_option ('-t', '--uri-ticks',
             type='string',
             action='store',
-            dest='uri_clients',
+            dest='uri_ticks',
             default='tcp://*:6667',
-            help='uri for clients [default: %default]'
+            help='uri to read ticks from [default: %default]'
         ),
 
-        make_option ('-t', '--io-threads',
+        make_option ('-u', '--uuid',
+            type='string',
+            action='store',
+            dest='unique_id',
+            default=uuid.uuid4 (),
+            help='universally unique identificator [default: %default]'
+        ),
+
+        make_option ('-z', '--io-threads',
             type='int',
             action='store',
             dest='sz_threads',
             default=1,
-            help='size of the ZMQ thread pool to handle I/O operations \
-                  [default: %default]'
+            help='size of the ZMQ thread pool to handle I/O operations [default: %default]'
         ),
     )
     
@@ -180,15 +188,18 @@ class Command (BaseCommand):
         interval = {'beg':beg_datetime, 'end':end_datetime}
         scale = options['scale']
 
-        if options['uri_clients'] != None: uri_clients = options['uri_clients']
-        else: raise CommandError ('URI_CLIENTS not set')
+        if options['uri_ticks'] != None: uri_ticks = options['uri_ticks']
+        else: raise CommandError ('URI_TICKS not set')
+
+        if options['unique_id'] != None: unique_id = options['unique_id']
+        else: raise CommandError ('UID_LOCAL not set')
 
         if options['sz_threads'] != None: sz_threads = options['sz_threads']
         else: raise CommandError ('SZ_THREADS not set')
 
         try:
-            self.server (
-                interval, tar_pair, scale, uri_clients, sz_threads
+            Command.serve (
+                unique_id, interval, tar_pair, scale, uri_ticks, sz_threads
             )
 
         except KeyboardInterrupt:
@@ -198,7 +209,7 @@ class Command (BaseCommand):
             srvlog.exception (ex)
 
     ###########################################################################################
-    def server (self, interval, pair, sleep, uri_clients, sz_threads):
+    def serve (unique_id, interval, pair, sleep, uri_ticks, sz_threads):
     ###########################################################################################
 
         srvlog = logging.getLogger ('srv')
@@ -207,13 +218,13 @@ class Command (BaseCommand):
         srvlog.debug ('initiating ZMQ context')
         context = zmq.Context (sz_threads)
 
-        srvlog.debug ('opening ZMQ PUB socket for clients')
-        socket = context.socket (zmq.PUB)
-        socket.bind (uri_clients)
+        srvlog.debug ('opening ZMQ PUB ticks socket @ %s' % uri_ticks)
+        ticks_socket = context.socket (zmq.PUB)
+        ticks_socket.bind (uri_ticks)
 
         srvlog.info ('server started')
         try:
-            self.main (socket, interval, pair, sleep)
+            Command.main (unique_id, ticks_socket, interval, pair, sleep)
 
         except KeyboardInterrupt:
             pass
@@ -224,15 +235,17 @@ class Command (BaseCommand):
         finally:
             srvlog.info ('shutting server down')
 
-            srvlog.debug ('closing clients\' socket')
-            socket.close ()
+            srvlog.debug ('closing ticks\' socket')
+            ticks_socket.close ()
             srvlog.debug ('terminating ZMQ context')
             context.term ()
 
             srvlog.info ('server shut down')
 
+    serve = staticmethod (serve)
+
     ###########################################################################################
-    def main (self, socket, interval, pair = None, scale = 1.0):
+    def main (unique_id, ticks_socket, interval, pair = None, scale = 1.0):
     ###########################################################################################
 
         from core.models import TICK
@@ -256,23 +269,41 @@ class Command (BaseCommand):
             )
 
         if scale == 0:
-            for tick in ticks:
+            for tick in ticks: ## TODO: enable 'play', 'stop', 'seek' .. !
 
-                mesg = '%s|%d|%0.6f|%0.6f' % (tick.pair, tick.unixstamp, tick.bid, tick.ask)
-                socket.send (mesg); msglog.debug (mesg); time.sleep (0)
+                time.sleep (0); Command.publish (unique_id, tick, ticks_socket, msglog)
 
         else:
             last = ticks[0]
             tack = time.clock ()
-            for tick in ticks:
+            for tick in ticks: ## TODO: enable 'play', 'stop', 'seek' .. !
 
                 time.sleep (max (0,
                     ((tick.unixstamp - last.unixstamp) - (time.clock () - tack)) * scale
                 ))
 
                 tack = time.clock (); last = tick
-                mesg = '%s|%d|%0.6f|%0.6f' % (tick.pair, tick.unixstamp, tick.bid, tick.ask)
-                socket.send (mesg); msglog.debug (mesg)
+                Command.publish (unique_id, tick, ticks_socket, msglog)
+
+    main = staticmethod (main)
+
+    ###########################################################################################
+    def publish (unique_id, tick, ticks_socket, msglog):
+    ###########################################################################################
+
+     ## payload = (unique_id, tick.pair, tick.unixstamp, tick.bid, tick.ask)
+     ## message = '%x|%s|%d|%0.6f|%0.6f' % payload
+        payload = (tick.pair, tick.unixstamp, tick.bid, tick.ask)
+        message = '%s|%d|%0.6f|%0.6f' % payload
+        ticks_socket.send (message)
+        msglog.debug (message)
+
+        ##
+        ## TODO: Update cache with most recent (i.e. actual) tick using a REQ-REQ socket *or*
+        ##       directly accessing the cache!
+        ##
+
+    publish = staticmethod (publish)
 
 ###############################################################################################
 ###############################################################################################

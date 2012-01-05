@@ -60,7 +60,7 @@ class Command (BaseCommand):
             type='string',
             action='store',
             dest='uri_workers',
-            default='inproc://workers',
+            default='inproc://srv-workers',
             help='uri for worker threads [default: %default]'
         ),
 
@@ -72,18 +72,17 @@ class Command (BaseCommand):
             help='number of worker threads [default: %default]'
         ),
 
-        make_option ('-t', '--io-threads',
+        make_option ('-z', '--io-threads',
             type='int',
             action='store',
             dest='sz_threads',
             default=1,
-            help='size of the ZMQ thread pool to handle I/O operations \
-                  [default: %default]'
+            help='size of the ZMQ thread pool to handle I/O operations [default: %default]'
         ),
     )
 
     ###########################################################################################
-    def handle(self, *args, **options):
+    def handle (self, *args, **options):
     ###########################################################################################
 
         logging.basicConfig (format='[%(asctime)s] %(levelname)s: %(message)s')
@@ -105,7 +104,7 @@ class Command (BaseCommand):
         )
 
         try:
-            self.server (
+            Command.serve (
                 options['uri_clients'],
                 options['uri_workers'],
                 options['sz_workers'],
@@ -119,7 +118,7 @@ class Command (BaseCommand):
             srvlog.exception (ex)
             
     ###########################################################################################
-    def server (self, uri_clients, uri_workers, sz_workers, sz_threads):
+    def serve (uri_clients, uri_workers, sz_workers, sz_threads):
     ###########################################################################################
 
         srvlog = logging.getLogger ('srv')
@@ -128,11 +127,11 @@ class Command (BaseCommand):
         srvlog.debug ('initiating ZMQ context')
         context = zmq.Context (sz_threads)
 
-        srvlog.debug ('opening ZMQ XREP socket for clients')
+        srvlog.debug ('opening ZMQ XREP clients\' socket @ %s' % uri_clients)
         clients = context.socket (zmq.XREP)
         clients.bind (uri_clients)
 
-        srvlog.debug ('opening ZMQ XREQ socket for workers')
+        srvlog.debug ('opening ZMQ XREQ workers\' socket @ %s' % uri_workers)
         workers = context.socket (zmq.XREQ)
         workers.bind (uri_workers)
 
@@ -141,7 +140,7 @@ class Command (BaseCommand):
 
             srvlog.debug ('initiating worker thread T%02d' % id)
             thread = threading.Thread (
-                target=self.worker, args=(id, uri_workers, context)
+                target=Command.main, args=(id, uri_workers, context)
             )
 
             srvlog.debug ('starting worker thread T%02d' % id)
@@ -171,8 +170,10 @@ class Command (BaseCommand):
 
             srvlog.info ('server shut down')
 
+    serve = staticmethod (serve)
+
     ###########################################################################################
-    def worker (self, id, uri, context):
+    def main (id, uri, context):
     ###########################################################################################
 
         srvlog = logging.getLogger ('srv')
@@ -191,7 +192,7 @@ class Command (BaseCommand):
                 request = socket.recv_unicode ()
                 msglog.debug ('T%02d - REQ "%s"' % (id, request))
 
-                response = self.process (*request.split ('|'))
+                response = Command.process (*request.split ('|'))
                 msglog.debug ('T%02d - REP "%s"' % (id, response))
 
                 socket.send_unicode (response)
@@ -206,8 +207,10 @@ class Command (BaseCommand):
 
         srvlog.info ('T%02d - worker thread stopped' % id)
 
+    main = staticmethod (main)
+
     ###########################################################################################
-    def process (self, cls, method, *args):
+    def process (cls, method, *args):
     ###########################################################################################
 
         import core.models
@@ -217,6 +220,8 @@ class Command (BaseCommand):
         except Exception, ex:
             logging.getLogger ('srv').exception (ex)
             return 'EXCEPTION|%s' % ex
+
+    process = staticmethod (process)
 
 ###############################################################################################
 ###############################################################################################

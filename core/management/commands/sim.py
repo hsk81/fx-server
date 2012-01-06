@@ -291,12 +291,14 @@ class Command (BaseCommand):
     def publish (unique_id, tick, ticks_socket, msglog):
     ###########################################################################################
 
-     ## payload = (unique_id, tick.pair, tick.unixstamp, tick.bid, tick.ask)
-     ## message = '%x|%s|%d|%0.6f|%0.6f' % payload
-        payload = (tick.pair, tick.unixstamp, tick.bid, tick.ask)
-        message = '%s|%d|%0.6f|%0.6f' % payload
-        ticks_socket.send (message)
-        msglog.debug (message)
+        messages = [
+            '%s' % tick.pair, '%s' % unique_id, '%d|%0.6f|%0.6f' % (
+                tick.unixstamp, tick.bid, tick.ask
+            )
+        ]
+
+        ticks_socket.send_multipart (messages)
+        msglog.debug (messages)
 
         ##
         ## TODO: Update cache with most recent (i.e. actual) tick using a REQ-REQ socket *or*
